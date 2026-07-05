@@ -1,0 +1,37 @@
+Category,Feature,Backend Files,Frontend Files,Type,Notes
+Authentication,User registration,Backend/routes/auth.js; Backend/controllers/authController.js; Backend/models/User.js,frontend/src/components/auth/Login.tsx,Functional,JWT auth flows
+Authentication,User login,Backend/routes/auth.js; Backend/controllers/authController.js; Backend/models/User.js,frontend/src/components/auth/Login.tsx,Functional
+Authentication,Session status,Backend/routes/auth.js; Backend/controllers/authController.js,N/A,Functional
+Users,User list,Backend/routes/users.js; Backend/controllers/userController.js,frontend/src/components/modules/settings?,Functional,Admin only
+Patients,Create patient,Backend/routes/patients.js; Backend/controllers/patientController.js; Backend/models/Patient.js,frontend/src/components/modules/patients,Functional
+Patients,Read patients (list/search/paging),Backend/routes/patients.js; Backend/controllers/patientController.js,frontend/src/components/modules/patients,Functional
+Patients,Get patient by id/uhid,Backend/routes/patients.js; Backend/controllers/patientController.js,frontend/src/components/modules/patients,Functional
+Patients,Update patient,Backend/routes/patients.js; Backend/controllers/patientController.js,frontend/src/components/modules/patients,Functional
+Patients,Delete patient,Backend/routes/patients.js; Backend/controllers/patientController.js,frontend/src/components/modules/patients,Functional
+Appointments,Create appointment,Backend/routes/appointments.js; Backend/controllers/appointmentController.js,frontend/src/components/modules/appointmentList,Functional
+Appointments,List appointments,Backend/routes/appointments.js; Backend/controllers/appointmentController.js,frontend/src/components/modules/appointmentList,Functional
+Appointments,Update appointment,Backend/routes/appointments.js; Backend/controllers/appointmentController.js,frontend/src/components/modules/appointmentList,Functional
+Appointments,Cancel/delete appointment,Backend/routes/appointments.js; Backend/controllers/appointmentController.js,frontend/src/components/modules/appointmentList,Functional
+Doctors,List doctors,Backend/routes/doctors.js; Backend/controllers/doctorsController.js,frontend/src/components/modules/doctors,Functional
+Doctors,Create doctor,Backend/routes/doctors.js; Backend/controllers/doctorsController.js,frontend/src/components/modules/doctors,Functional
+Doctors,Update doctor,Backend/routes/doctors.js; Backend/controllers/doctorsController.js,frontend/src/components/modules/doctors,Functional
+Doctors,Update availability,Backend/routes/doctors.js; Backend/controllers/doctorsController.js,frontend/src/components/modules/doctors,Functional
+Doctors,Delete doctor,Backend/routes/doctors.js; Backend/controllers/doctorsController.js,frontend/src/components/modules/doctors,Functional
+Billing,Create billing,Backend/routes/billing.js; Backend/controllers/billingController.js,frontend/src/components/modules/billing,Functional
+Billing,List/lookup bills,Backend/routes/billing.js; Backend/controllers/billingController.js,frontend/src/components/modules/billing,Functional
+EMR,Create EMR,Backend/routes/emr.js; Backend/controllers/emrController.js,frontend/src/components/modules/emr,Functional
+EMR,List EMR,Backend/routes/emr.js; Backend/controllers/emrController.js,frontend/src/components/modules/emr,Functional
+EMR,Update EMR,Backend/routes/emr.js; Backend/controllers/emrController.js,frontend/src/components/modules/emr,Functional
+EMR,Delete EMR (soft),Backend/routes/emr.js; Backend/controllers/emrController.js,frontend/src/components/modules/emr,Functional
+Pharmacy,Create item,Backend/routes/pharmacy.js; Backend/controllers/pharmacyController.js,frontend/src/components/modules/pharmacy,Functional
+Pharmacy,List items,Backend/routes/pharmacy.js; Backend/controllers/pharmacyController.js,frontend/src/components/modules/pharmacy,Functional
+Pharmacy,Update item,Backend/routes/pharmacy.js; Backend/controllers/pharmacyController.js,frontend/src/components/modules/pharmacy,Functional
+Pharmacy,Delete item,Backend/routes/pharmacy.js; Backend/controllers/pharmacyController.js,frontend/src/components/modules/pharmacy,Functional
+Security,JWT middleware,Backend/middleware/authMiddleware.js,N/A,Non-functional,auth/secure
+Security,Role-based authorization,Backend/middleware/roleMiddleware.js, N/A,Non-functional
+Security,Permission config,Backend/config/permissions.js,N/A,Non-functional
+Performance,Query pagination,Backend/controllers/patientController.js,appointmentController.js etc, N/A,Non-functional
+Performance,DB indexes,Backend/models/Patient.js; Appoinment.js; EMR.js,N/A,Non-functional
+Reliability,Error handling in controllers,Backend/controllers/*,N/A,Non-functional
+Maintainability,Layered architecture,Backend/{routes,controllers,models,config,middleware},frontend/components,Non-functional
+Dev experience,Dev bypass auth flag,Backend/middleware/roleMiddleware.js,N/A,Non-functional
