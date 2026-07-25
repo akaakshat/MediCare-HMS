@@ -1,11 +1,12 @@
 import { useState, useEffect, useContext } from 'react';
-import { Search, Plus, Eye, Edit, Trash2, ArrowLeft, Phone, Mail, MapPin, X, Loader2 } from 'lucide-react';
+import { Search, Plus, Eye, Edit, Trash2, ArrowLeft, Phone, Mail, MapPin, X } from 'lucide-react';
 import { ApiClient } from '../../../utils/api';
 import { toast } from 'sonner';
 import { AuthContext } from '../../../context/AuthContext';
 import { MDMDropdown } from '../../ui/mdm-dropdown';
 import { Permissions } from '../../../config/permissions';
 import { formatDateDDMMYYYY } from '../../../utils/date';
+import { TableSkeleton } from '../../ui/LoadingSkeleton';
 
 interface PatientListProps {
   onBack: () => void;
@@ -275,10 +276,7 @@ export function PatientList({ onBack }: PatientListProps) {
         </div>
 
         {loading ? (
-          <div className="text-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
-            <p className="text-gray-600">Loading patients...</p>
-          </div>
+          <TableSkeleton rows={6} columns={9} className="pt-2" />
         ) : (
           <>
             <div className="overflow-x-auto">

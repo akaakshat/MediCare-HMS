@@ -62,6 +62,14 @@ export function Settings() {
     load();
   }, []);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+    document.body.classList.toggle('dark', theme === 'dark');
+    window.localStorage.setItem('app_theme', theme);
+    window.dispatchEvent(new CustomEvent('app-theme-change', { detail: { theme } }));
+  }, [theme]);
+
   const saveSettings = async () => {
     setSaving(true);
     const payload = {
@@ -161,7 +169,7 @@ export function Settings() {
 
       <section className="mb-6">
         <h3 className="font-medium mb-2">Language</h3>
-        <select value={language} onChange={e=>setLanguage(e.target.value as any)} className="input w-48">
+        <select value={language} onChange={e=>setLanguage(e.target.value as any)} className="input w-48" aria-label="Language">
           <option value="en">English</option>
           <option value="hi">Hindi</option>
         </select>

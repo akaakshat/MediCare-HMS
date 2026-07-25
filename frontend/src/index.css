@@ -130,6 +130,46 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  body.dark {
+    background-color: #020617;
+    color: #f8fafc;
+  }
+
+  body.dark .bg-white {
+    background-color: #111827 !important;
+    color: #f8fafc !important;
+  }
+
+  body.dark .bg-gray-50 {
+    background-color: #1f2937 !important;
+  }
+
+  body.dark .bg-gray-100 {
+    background-color: #374151 !important;
+  }
+
+  body.dark .border-gray-200,
+  body.dark .border-gray-100 {
+    border-color: #374151 !important;
+  }
+
+  body.dark .text-gray-900 {
+    color: #f8fafc !important;
+  }
+
+  body.dark .text-gray-700,
+  body.dark .text-gray-600,
+  body.dark .text-gray-500,
+  body.dark .text-gray-400 {
+    color: #cbd5e1 !important;
+  }
+
+  body.dark .shadow,
+  body.dark .shadow-sm,
+  body.dark .shadow-lg {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35) !important;
+  }
 }
 
 /**

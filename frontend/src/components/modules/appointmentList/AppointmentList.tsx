@@ -1,10 +1,11 @@
 import { useState, useEffect, useContext } from 'react';
-import { ArrowLeft, Plus, Calendar, Clock, User, Phone, CheckCircle, XCircle, X, Loader2, Edit, Trash2, Eye, Search } from 'lucide-react';
+import { ArrowLeft, Plus, Calendar, Clock, User, Phone, CheckCircle, XCircle, X, Edit, Trash2, Eye, Search } from 'lucide-react';
 import { ApiClient } from '../../../utils/api';
 import { toast } from 'sonner';
 import { formatDateDDMMYYYY, formatDateTimeDDMMYYYY } from '../../../utils/date';
 import { Permissions } from '../../../config/permissions';
 import { AuthContext } from '../../../context/AuthContext';
+import { TableSkeleton } from '../../ui/LoadingSkeleton';
 
 interface AppointmentListProps {
   onBack: () => void;
@@ -404,10 +405,7 @@ export function AppointmentList({ onBack }: AppointmentListProps) {
           </div>
         </div>
         {loading ? (
-          <div className="text-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-green-600 mx-auto mb-4" />
-            <p className="text-gray-600">Loading appointments...</p>
-          </div>
+          <TableSkeleton rows={6} columns={9} className="pt-2" />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">

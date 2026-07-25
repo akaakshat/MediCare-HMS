@@ -1,5 +1,6 @@
 import { useState, useEffect, useContext } from 'react';
 import { ArrowLeft, Plus, Search, Stethoscope, Calendar, Clock, Award, Edit, Trash2, X } from 'lucide-react';
+import { TableSkeleton } from '../../ui/LoadingSkeleton';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
 import { ApiClient } from '../../../utils/api';
@@ -236,11 +237,7 @@ export function DoctorList({ onBack }: DoctorListProps) {
   const isSelfDoctorEditing = user?.role === 'doctor' && isDoctorSelf(editingDoctor || undefined);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
+    return <TableSkeleton rows={6} columns={7} className="pt-4" />;
   }
 
   return (

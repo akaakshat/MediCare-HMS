@@ -18,6 +18,7 @@ import { NoAccessPage } from './components/modules/NoAccessPage';
 import { Login } from './components/auth/Login';
 import Settings from './components/modules/settings/Settings';
 import { ITSupportAssistant } from './components/common/ITSupportAssistant';
+import { PageSkeleton } from './components/ui/LoadingSkeleton';
 import { ApiClient } from './utils/api';
 import { hasFeatureAccess } from './utils/permissions';
 
@@ -103,6 +104,10 @@ export default function App() {
   const [dbConnectionError, setDbConnectionError] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeModule, setActiveModule] = useState('dashboard');
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof window === 'undefined') return 'light';
+    return (window.localStorage.getItem('app_theme') === 'dark' ? 'dark' : 'light');
+  });
   const [statsState, setStatsState] = useState({
     patientsCount: 0,
     appointmentsCount: 0,
@@ -126,6 +131,32 @@ export default function App() {
   useEffect(() => {
     checkSystemHealth();
   }, []);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const body = document.body;
+    root.classList.toggle('dark', theme === 'dark');
+    body.classList.toggle('dark', theme === 'dark');
+    window.localStorage.setItem('app_theme', theme);
+  }, [theme]);
+
+  useEffect(() => {
+    const onThemeChange = (event: Event) => {
+      const nextTheme = (event as CustomEvent<{ theme?: 'light' | 'dark' }>).detail?.theme;
+      if (nextTheme && nextTheme !== theme) {
+        setTheme(nextTheme);
+      }
+    };
+
+    window.addEventListener('app-theme-change', onThemeChange as EventListener);
+    return () => window.removeEventListener('app-theme-change', onThemeChange as EventListener);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    window.dispatchEvent(new CustomEvent('app-theme-change', { detail: { theme: nextTheme } }));
+  };
 
   // Global handler: when backend reports invalid/expired token, stop polling and force logout
   useEffect(() => {
@@ -277,14 +308,7 @@ export default function App() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading Hospital Management System...</p>
-        </div>
-      </div>
-    );
+    return <PageSkeleton />;
   }
 
   
@@ -560,13 +584,16 @@ export default function App() {
         onModuleChange={setActiveModule}
       />
       
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden bg-gray-50 text-gray-900 dark:bg-slate-950 dark:text-slate-100">
         <Header 
           onMenuClick={() => setSidebarOpen(!sidebarOpen)}
           activeModule={activeModule}
+          onModuleChange={setActiveModule}
+          theme={theme}
+          onThemeToggle={toggleTheme}
         />
         
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto p-6 bg-gray-50 text-gray-900 dark:bg-slate-950 dark:text-slate-100">
           {renderContent()}
         </main>
       </div>
