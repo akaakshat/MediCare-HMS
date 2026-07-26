@@ -1,11 +1,16 @@
-import { useState, useEffect, useContext } from 'react';
-import { ArrowLeft, Plus, Calendar, Clock, User, Phone, CheckCircle, XCircle, X, Edit, Trash2, Eye, Search } from 'lucide-react';
+import { useState, useEffect, useContext, useMemo } from 'react';
+import { ArrowLeft, Plus, CheckCircle, XCircle, X, Edit, Eye, Search } from 'lucide-react';
 import { ApiClient } from '../../../utils/api';
 import { toast } from 'sonner';
-import { formatDateDDMMYYYY, formatDateTimeDDMMYYYY } from '../../../utils/date';
+import { formatDateDDMMYYYY } from '../../../utils/date';
 import { Permissions } from '../../../config/permissions';
 import { AuthContext } from '../../../context/AuthContext';
 import { TableSkeleton } from '../../ui/LoadingSkeleton';
+import { calculateQueuePosition, assignBestDoctor } from '../../../services/queueService';
+import { DEFAULT_AVERAGE_CONSULTATION_MINUTES } from '../../../utils/constants';
+import { getPriorityBadge, normalizePriority } from '../../../utils/priority';
+import { formatMinutesToLabel } from '../../../utils/time';
+import { getBookingOptimizerSuggestion, getOptimizerDashboardSummary, getDisplayWaitingTime } from '../../../services/appointmentOptimizer';
 
 interface AppointmentListProps {
   onBack: () => void;
@@ -23,6 +28,10 @@ interface Appointment {
   type?: string;
   status: string;
   phone?: string;
+  priority?: string;
+  queuePosition?: number;
+  estimatedWaitMinutes?: number;
+  estimatedFinishMinutes?: number;
 }
 
 export function AppointmentList({ onBack }: AppointmentListProps) {
@@ -47,13 +56,16 @@ export function AppointmentList({ onBack }: AppointmentListProps) {
     time: '09:00',
     type: 'Consultation',
     status: 'Pending',
-    phone: ''
+    phone: '',
+    priority: 'Normal'
   });
   const [doctors, setDoctors] = useState<any[]>([]);
   const [doctorAvailabilityNote, setDoctorAvailabilityNote] = useState('');
   const [isDoctorAvailable, setIsDoctorAvailable] = useState(true);
   const [availableSlots, setAvailableSlots] = useState<any[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
+  const [optimizerSuggestion, setOptimizerSuggestion] = useState<any>(null);
+  const [optimizerDashboard, setOptimizerDashboard] = useState<any>(null);
   const { user } = useContext(AuthContext);
 
   useEffect(() => {
@@ -69,6 +81,25 @@ export function AppointmentList({ onBack }: AppointmentListProps) {
     loadAppointments();
     fetchDoctors();
   }, [page, limit, debouncedSearch]);
+
+  useEffect(() => {
+    if (!showAddModal || !doctors.length || formData.doctor) return;
+
+    const recommendedDoctor = assignBestDoctor(appointments, doctors, formData.doctor);
+    if (recommendedDoctor) {
+      setFormData((previous) => (previous.doctor === recommendedDoctor ? previous : { ...previous, doctor: recommendedDoctor }));
+    }
+  }, [showAddModal, appointments, doctors, formData.doctor]);
+
+  useEffect(() => {
+    if (!showAddModal) {
+      setOptimizerSuggestion(null);
+      return;
+    }
+
+    const suggestion = getBookingOptimizerSuggestion(appointments, formData, doctors);
+    setOptimizerSuggestion(suggestion);
+  }, [appointments, doctors, formData, showAddModal]);
 
   const fetchDoctors = async () => {
     try {
@@ -158,11 +189,14 @@ export function AppointmentList({ onBack }: AppointmentListProps) {
           date: apt.date || date,
           time: apt.time || time,
           type: apt.type || 'Consultation',
+          priority: apt.priority || 'Normal',
         };
       });
       setAppointments(list);
       setTotal(response.pagination?.total || 0);
       setTotalPages(response.pagination?.totalPages || 1);
+      const optimizerDashboardPayload = (response as any).optimizerDashboard || getOptimizerDashboardSummary(list);
+      setOptimizerDashboard(optimizerDashboardPayload);
     } catch (error) {
       toast.error('Failed to load appointments');
       console.error(error);
@@ -200,7 +234,7 @@ export function AppointmentList({ onBack }: AppointmentListProps) {
       const doctorObj = doctors.find(d => (d._id || d.id) === formData.doctor);
       const doctorName = doctorObj ? doctorObj.name.trim() : formData.doctor;
 
-      const payload = { ...formData, doctor: doctorName, time: startTime, slot: formData.slot };
+      const payload = { ...formData, doctor: doctorName, time: startTime, slot: formData.slot, priority: normalizePriority(formData.priority) };
 
       const response: any = await ApiClient.createAppointment(payload);
       if (response.success && response.duplicateUHIDs && response.duplicateUHIDs.length > 0) {
@@ -221,7 +255,8 @@ export function AppointmentList({ onBack }: AppointmentListProps) {
         time: '09:00',
         type: 'Consultation',
         status: 'Pending',
-        phone: ''
+        phone: '',
+        priority: 'Normal'
       });
       setAvailableSlots([]);
       loadAppointments();
@@ -255,10 +290,12 @@ export function AppointmentList({ onBack }: AppointmentListProps) {
       doctor: doctorId,
       // Use computed date/time if schedule stored in scheduledAt
       date: apt.date || (apt.scheduledAt ? new Date(apt.scheduledAt).toISOString().split('T')[0] : ''),
+      slot: '',
       time: apt.time || (apt.scheduledAt ? new Date(apt.scheduledAt).toTimeString().slice(0, 5) : '09:00'),
       type: apt.type || 'Consultation',
       status: apt.status,
-      phone: apt.phone || (typeof apt.patient === 'object' ? apt.patient?.phone || '' : '')
+      phone: apt.phone || (typeof apt.patient === 'object' ? apt.patient?.phone || '' : ''),
+      priority: normalizePriority(apt.priority)
     });
     setShowEditModal(true);
   };
@@ -280,7 +317,7 @@ export function AppointmentList({ onBack }: AppointmentListProps) {
     try {
       const id = (selectedAppointment as any)._id || (selectedAppointment as any).id;
       // prefer sending a patient ObjectId when we have a populated patient
-      const payload: any = { ...formData };
+      const payload: any = { ...formData, priority: normalizePriority(formData.priority) };
       if (selectedAppointment.patient && typeof selectedAppointment.patient === 'object' && selectedAppointment.patient._id) {
         payload.patient = selectedAppointment.patient._id;
       } else if (formData.patient && typeof formData.patient === 'string' && (formData.patient as string).match(/^[0-9a-fA-F]{24}$/)) {
@@ -361,6 +398,34 @@ export function AppointmentList({ onBack }: AppointmentListProps) {
     return 'N/A';
   };
 
+  const queueItems = useMemo(() => calculateQueuePosition(appointments, DEFAULT_AVERAGE_CONSULTATION_MINUTES), [appointments]);
+  const queueItemMap = useMemo(() => new Map(queueItems.map((item) => [String(item._id || item.appointmentId || ''), item])), [queueItems]);
+  const doctorSummaries = useMemo(() => {
+    return doctors
+      .map((doctor) => {
+        const doctorId = doctor._id || doctor.id || '';
+        const doctorName = doctor.name || doctorId || 'Unassigned';
+        const normalizedDoctorName = String(doctorName).trim().toLowerCase();
+        const queueForDoctor = queueItems.filter((item) => {
+          const itemDoctorName = String(item.doctorName || '').trim().toLowerCase();
+          const itemDoctorKey = String(item.doctorKey || '').trim().toLowerCase();
+          return itemDoctorName === normalizedDoctorName || itemDoctorKey === normalizedDoctorName;
+        });
+        const averageWait = queueForDoctor.length > 0
+          ? Math.round(queueForDoctor.reduce((sum, item) => sum + (item.estimatedWaitMinutes || 0), 0) / queueForDoctor.length)
+          : 0;
+        const estimatedFinish = new Date(Date.now() + averageWait * 60000);
+        return {
+          key: doctorId || doctorName,
+          name: doctorName,
+          currentPatients: queueForDoctor.length,
+          averageWait,
+          estimatedFinish: estimatedFinish.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
+        };
+      })
+      .filter((summary) => summary.currentPatients > 0);
+  }, [doctors, queueItems]);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -391,8 +456,60 @@ export function AppointmentList({ onBack }: AppointmentListProps) {
         )}
       </div>
 
+      {optimizerDashboard && (
+        <div className="bg-white rounded-lg shadow border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">AI Appointment Insights</h3>
+              <p className="text-sm text-gray-500">Advisory predictions based on appointment history</p>
+            </div>
+            <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">AI Only</span>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+              <p className="text-xs text-gray-500">Average Patient Delay</p>
+              <p className="text-lg font-semibold text-gray-900">{optimizerDashboard.averagePatientDelay} min</p>
+            </div>
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+              <p className="text-xs text-gray-500">Average Doctor Delay</p>
+              <p className="text-lg font-semibold text-gray-900">{optimizerDashboard.averageDoctorDelay} min</p>
+            </div>
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+              <p className="text-xs text-gray-500">Average Waiting Time</p>
+              <p className="text-lg font-semibold text-gray-900">{getDisplayWaitingTime(optimizerDashboard.averageWaitingTime)}</p>
+            </div>
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+              <p className="text-xs text-gray-500">Prediction Accuracy</p>
+              <p className="text-lg font-semibold text-gray-900">{optimizerDashboard.predictionAccuracy}%</p>
+            </div>
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded-lg border border-gray-200 p-3 text-sm text-gray-700">No-show rate: {optimizerDashboard.noShowRate}%</div>
+            <div className="rounded-lg border border-gray-200 p-3 text-sm text-gray-700">Late arrival rate: {optimizerDashboard.lateArrivalRate}%</div>
+            <div className="rounded-lg border border-gray-200 p-3 text-sm text-gray-700">Most delayed doctor: {optimizerDashboard.mostDelayedDoctor}</div>
+            <div className="rounded-lg border border-gray-200 p-3 text-sm text-gray-700">Most reliable patient: {optimizerDashboard.mostReliablePatient}</div>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2 text-sm text-gray-600">
+            <span className="rounded-full bg-gray-100 px-3 py-1">Top type: {optimizerDashboard.topAppointmentType}</span>
+            <span className="rounded-full bg-gray-100 px-3 py-1">Avg consult time: {optimizerDashboard.averageConsultationTime} min</span>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white rounded-lg shadow border border-gray-200 p-6">
         <div className="mb-6">
+          {doctorSummaries.length > 0 && (
+            <div className="mb-4 grid gap-3 md:grid-cols-3">
+              {doctorSummaries.map((summary) => (
+                <div key={summary.key} className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                  <p className="text-sm font-semibold text-gray-900">{summary.name}</p>
+                  <p className="mt-1 text-xs text-gray-600">Current Patients: {summary.currentPatients}</p>
+                  <p className="text-xs text-gray-600">Average Wait: {formatMinutesToLabel(summary.averageWait)}</p>
+                  <p className="text-xs text-gray-600">Estimated Finish: {summary.estimatedFinish}</p>
+                </div>
+              ))}
+            </div>
+          )}
           <div className="flex items-center gap-2 bg-gray-100 rounded-lg px-4 py-2">
             <Search className="w-4 h-4 text-gray-500" />
             <input
@@ -417,27 +534,40 @@ export function AppointmentList({ onBack }: AppointmentListProps) {
                   <th className="text-left py-3 px-4 text-sm text-gray-600">Doctor</th>
                   <th className="text-left py-3 px-4 text-sm text-gray-600">Date</th>
                   <th className="text-left py-3 px-4 text-sm text-gray-600">Time</th>
+                  <th className="text-left py-3 px-4 text-sm text-gray-600">Queue</th>
+                  <th className="text-left py-3 px-4 text-sm text-gray-600">Priority</th>
+                  <th className="text-left py-3 px-4 text-sm text-gray-600">Wait</th>
                   <th className="text-left py-3 px-4 text-sm text-gray-600">Type</th>
                   <th className="text-left py-3 px-4 text-sm text-gray-600">Status</th>
                   <th className="text-left py-3 px-4 text-sm text-gray-600">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {appointments.map((apt) => (
-                  <tr key={apt._id || apt.appointmentId} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="py-3 px-4 text-sm text-gray-900">{apt.appointmentId || apt._id}</td>
-                    <td className="py-3 px-4 text-sm text-gray-900">{typeof apt.patient === 'string' ? apt.patient : apt.patient?.name || 'Unknown'}</td>
-                    <td className="py-3 px-4 text-sm text-gray-600">{apt.uhid || (typeof apt.patient === 'object' ? apt.patient?.uhid || 'N/A' : 'N/A')}</td>
-                    <td className="py-3 px-4 text-sm text-gray-600">{getDoctorDisplayName(apt.doctor)}</td>
-                    <td className="py-3 px-4 text-sm text-gray-600">{apt.date}</td>
-                    <td className="py-3 px-4 text-sm text-gray-600">{apt.time}</td>
-                    <td className="py-3 px-4 text-sm text-gray-600">{apt.type}</td>
-                    <td className="py-3 px-4">
-                      <span className={`px-2 py-1 rounded text-xs ${getStatusColor(apt.status)}`}>
-                        {apt.status}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
+                {appointments.map((apt) => {
+                  const queueItem = queueItemMap.get(String(apt._id || apt.appointmentId || ''));
+                  const priorityBadge = getPriorityBadge(apt.priority);
+                  return (
+                    <tr key={apt._id || apt.appointmentId} className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="py-3 px-4 text-sm text-gray-900">{apt.appointmentId || apt._id}</td>
+                      <td className="py-3 px-4 text-sm text-gray-900">{typeof apt.patient === 'string' ? apt.patient : apt.patient?.name || 'Unknown'}</td>
+                      <td className="py-3 px-4 text-sm text-gray-600">{apt.uhid || (typeof apt.patient === 'object' ? apt.patient?.uhid || 'N/A' : 'N/A')}</td>
+                      <td className="py-3 px-4 text-sm text-gray-600">{getDoctorDisplayName(apt.doctor)}</td>
+                      <td className="py-3 px-4 text-sm text-gray-600">{apt.date}</td>
+                      <td className="py-3 px-4 text-sm text-gray-600">{apt.time}</td>
+                      <td className="py-3 px-4 text-sm text-gray-700">#{queueItem?.queuePosition || '-'}</td>
+                      <td className="py-3 px-4 text-sm text-gray-700">
+                        <span className={`px-2 py-1 rounded text-xs ${priorityBadge.className}`}>
+                          {priorityBadge.label}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-sm text-gray-600">{queueItem ? formatMinutesToLabel(queueItem.estimatedWaitMinutes || 0) : '—'}</td>
+                      <td className="py-3 px-4 text-sm text-gray-600">{apt.type}</td>
+                      <td className="py-3 px-4">
+                        <span className={`px-2 py-1 rounded text-xs ${getStatusColor(apt.status)}`}>
+                          {apt.status}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => openViewModal(apt)}
@@ -448,7 +578,7 @@ export function AppointmentList({ onBack }: AppointmentListProps) {
                         </button>
                         {Permissions.appointmentModify.includes(user?.role || '') && apt.status === 'Pending' && (
                           <button 
-                            onClick={() => handleUpdateStatus(apt._id || apt.appointmentId || '')}
+                            onClick={() => handleUpdateStatus(apt._id || apt.appointmentId || '', 'Confirmed')}
                             className="p-1 hover:bg-green-50 rounded text-green-600"
                             title="Confirm"
                           >
@@ -476,7 +606,8 @@ export function AppointmentList({ onBack }: AppointmentListProps) {
                       </div>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
 
@@ -659,6 +790,19 @@ export function AppointmentList({ onBack }: AppointmentListProps) {
                   </select>
                 </div>
                 <div>
+                  <label className="block text-sm text-gray-700 mb-2">Priority</label>
+                  <select
+                    value={formData.priority}
+                    onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
+                  >
+                    <option value="Emergency">Emergency</option>
+                    <option value="Urgent">Urgent</option>
+                    <option value="Normal">Normal</option>
+                    <option value="Routine">Routine</option>
+                  </select>
+                </div>
+                <div>
                   <label className="block text-sm text-gray-700 mb-2">Status</label>
                   <select
                     value={formData.status}
@@ -670,6 +814,19 @@ export function AppointmentList({ onBack }: AppointmentListProps) {
                   </select>
                 </div>
               </div>
+              {optimizerSuggestion && (
+                <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 space-y-2">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-blue-800">
+                    <span>✨</span>
+                    <span>AI Appointment Optimizer</span>
+                  </div>
+                  <p className="text-sm text-blue-700">{optimizerSuggestion.arrivalHint}</p>
+                  <p className="text-sm text-blue-700">{optimizerSuggestion.doctorHint}</p>
+                  <p className="text-sm text-blue-700">Recommended slot: {optimizerSuggestion.recommendedSlot}</p>
+                  <p className="text-sm text-blue-700">Expected waiting time: {getDisplayWaitingTime(optimizerSuggestion.expectedWaitingMinutes)}</p>
+                  <p className="text-sm text-blue-700">Confidence: {optimizerSuggestion.confidence}% ({optimizerSuggestion.confidenceLabel})</p>
+                </div>
+              )}
               <div className="flex gap-3 justify-end">
                 <button
                   type="button"
@@ -796,6 +953,19 @@ export function AppointmentList({ onBack }: AppointmentListProps) {
                     <option value="Follow-up">Follow-up</option>
                     <option value="Check-up">Check-up</option>
                     <option value="Emergency">Emergency</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-700 mb-2">Priority</label>
+                  <select
+                    value={formData.priority}
+                    onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
+                  >
+                    <option value="Emergency">Emergency</option>
+                    <option value="Urgent">Urgent</option>
+                    <option value="Normal">Normal</option>
+                    <option value="Routine">Routine</option>
                   </select>
                 </div>
                 <div>

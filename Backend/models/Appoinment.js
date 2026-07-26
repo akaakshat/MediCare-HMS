@@ -9,7 +9,8 @@ const AppointmentSchema = new mongoose.Schema({
   visitTypeId: { type: mongoose.Schema.Types.ObjectId, ref: 'MasterData' },
   consultationTypeId: { type: mongoose.Schema.Types.ObjectId, ref: 'MasterData' },
   reason: { type: String },
-  status: { type: String, enum: ['Pending', 'Confirmed', 'Completed', 'Cancelled'], default: 'Pending' },
+  status: { type: String, enum: ['Pending', 'Confirmed', 'Completed', 'Cancelled', 'No-show'], default: 'Pending' },
+  priority: { type: String, enum: ['Emergency', 'Urgent', 'Normal', 'Routine'], default: 'Normal' },
   statusId: { type: mongoose.Schema.Types.ObjectId, ref: 'MasterData' },
 }, { timestamps: true });
 

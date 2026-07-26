@@ -4,8 +4,14 @@ const User = require('../models/User');
 const mongoose = require('mongoose');
 const mdmIntegration = require('../utils/mdmIntegration');
 const { updatePatientActivity } = require('../utils/patientActivity');
+const { attachOptimizerInsights } = require('../services/appointmentOptimizer');
 
 const escapeRegex = (text) => (typeof text === 'string' ? text.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&') : text);
+const normalizePriority = (value) => {
+  const normalized = String(value || '').trim();
+  if (['Emergency', 'Urgent', 'Normal', 'Routine'].includes(normalized)) return normalized;
+  return 'Normal';
+};
 
 exports.createAppointment = async (req, res) => {
   try {
@@ -62,6 +68,8 @@ exports.createAppointment = async (req, res) => {
       const valid = await mdmIntegration.validateMasterId('consultation_type', payload.consultationTypeId);
       if (!valid) return res.status(400).json({ success: false, message: 'Invalid consultationTypeId provided' });
     }
+
+    payload.priority = normalizePriority(payload.priority);
 
     // Build scheduledAt from date + time if provided
     if (!payload.scheduledAt && payload.date) {
@@ -134,6 +142,16 @@ exports.createAppointment = async (req, res) => {
 
     const ap = new Appointment(payload);
     const saved = await ap.save();
+    const allAppointments = await Appointment.find({})
+      .populate('patient')
+      .populate('statusId visitTypeId consultationTypeId')
+      .sort({ scheduledAt: 1 });
+    const decoratedAppointments = attachOptimizerInsights(allAppointments);
+    const savedAppointment = decoratedAppointments.find((appointment) => String(appointment._id) === String(saved._id)) || {
+      ...(saved.toObject ? saved.toObject() : saved),
+      optimizer: null,
+      optimizerDashboard: null,
+    };
 
     await updatePatientActivity(payload.patient);
 
@@ -152,7 +170,12 @@ exports.createAppointment = async (req, res) => {
       });
     }
 
-    res.status(201).json({ success: true, appointment: saved });
+    res.status(201).json({
+      success: true,
+      appointment: savedAppointment,
+      optimizer: savedAppointment.optimizer,
+      optimizerDashboard: savedAppointment.optimizerDashboard,
+    });
   } catch (err) {
     console.error('createAppointment error:', err);
     console.error('Stack:', err.stack);
@@ -227,8 +250,9 @@ exports.getAppointments = async (req, res) => {
     ]);
 
     const totalPages = Math.ceil(total / limit);
+    const decoratedAppointments = attachOptimizerInsights(appointments);
 
-    res.json({ success: true, appointments, pagination: { page, limit, total, totalPages } });
+    res.json({ success: true, appointments: decoratedAppointments, pagination: { page, limit, total, totalPages }, optimizerDashboard: attachOptimizerInsights(appointments)[0]?.optimizerDashboard || null });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: 'Error fetching appointments', error: err.message });
@@ -258,7 +282,9 @@ exports.getAppointmentById = async (req, res) => {
       }
     }
 
-    res.json({ success: true, appointment: ap });
+    const decoratedAppointments = attachOptimizerInsights([ap]);
+    const decoratedAppointment = decoratedAppointments[0] || ap;
+    res.json({ success: true, appointment: decoratedAppointment, optimizer: decoratedAppointment.optimizer, optimizerDashboard: decoratedAppointment.optimizerDashboard });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: 'Server error', error: err.message });
@@ -304,6 +330,8 @@ exports.updateAppointment = async (req, res) => {
       const valid = await mdmIntegration.validateMasterId('consultation_type', payload.consultationTypeId);
       if (!valid) return res.status(400).json({ success: false, message: 'Invalid consultationTypeId provided' });
     }
+
+    payload.priority = normalizePriority(payload.priority);
 
     // Normalize patient similar to createAppointment: accept ObjectId, UHID, or name+phone
     let patientId = payload.patient;
@@ -352,8 +380,10 @@ exports.updateAppointment = async (req, res) => {
     }
 
     const ap = await Appointment.findByIdAndUpdate(req.params.id, payload, { new: true });
+    const decoratedAppointments = attachOptimizerInsights([ap]);
+    const decoratedAppointment = decoratedAppointments[0] || ap;
     await updatePatientActivity(payload.patient);
-    res.json({ success: true, appointment: ap });
+    res.json({ success: true, appointment: decoratedAppointment, optimizer: decoratedAppointment.optimizer, optimizerDashboard: decoratedAppointment.optimizerDashboard });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: 'Server error', error: err.message });
