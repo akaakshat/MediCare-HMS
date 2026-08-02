@@ -59,7 +59,20 @@ async function setupDatabase() {
     await PharmacyItem.collection.createIndex({ name: 1 });
     await PharmacyItem.collection.createIndex({ category: 1 });
     await PharmacyItem.collection.createIndex({ expiryDate: 1 });
+    await PharmacyItem.collection.createIndex({ medicineMasterId: 1 });
+    await PharmacyItem.collection.createIndex({ medicineCategoryId: 1 });
+    await PharmacyItem.collection.createIndex({ vendorId: 1 });
     console.log('✅ Pharmacy collection created with indexes');
+
+    // Sales collection
+    const Sale = require('../models/Sale');
+    await Sale.createCollection();
+    await Sale.collection.createIndex({ medicineId: 1 });
+    await Sale.collection.createIndex({ billId: 1 });
+    await Sale.collection.createIndex({ soldBy: 1 });
+    await Sale.collection.createIndex({ department: 1 });
+    await Sale.collection.createIndex({ date: -1 });
+    console.log('✅ Sales collection created with indexes');
 
     // Create admin user
     console.log('🔄 Creating admin user...');

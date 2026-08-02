@@ -1,6 +1,7 @@
 const Appointment = require('../models/Appoinment');
 const Patient = require('../models/Patient');
 const User = require('../models/User');
+const AuditLog = require('../models/AuditLog');
 const mongoose = require('mongoose');
 const mdmIntegration = require('../utils/mdmIntegration');
 const { updatePatientActivity } = require('../utils/patientActivity');
@@ -142,6 +143,20 @@ exports.createAppointment = async (req, res) => {
 
     const ap = new Appointment(payload);
     const saved = await ap.save();
+
+    await AuditLog.log(
+      'CREATE',
+      saved._id,
+      req.user,
+      'APPOINTMENT',
+      saved._id,
+      null,
+      `Appointment created for patient ${payload.patient} on ${saved.scheduledAt}`,
+      req.ip,
+      req.headers['user-agent'],
+      { doctor: saved.doctor, appointmentId: saved.appointmentId }
+    );
+
     const allAppointments = await Appointment.find({})
       .populate('patient')
       .populate('statusId visitTypeId consultationTypeId')
@@ -421,6 +436,19 @@ exports.deleteAppointment = async (req, res) => {
         return res.status(403).json({ success: false, message: 'Forbidden' });
       }
     }
+
+    await AuditLog.log(
+      'DELETE',
+      appointment._id,
+      req.user,
+      'APPOINTMENT',
+      appointment._id,
+      null,
+      `Appointment deleted: ${appointment.appointmentId || appointment._id}`,
+      req.ip,
+      req.headers['user-agent'],
+      { doctor: appointment.doctor }
+    );
 
     await appointment.deleteOne();
     res.json({ success: true, message: 'Deleted' });

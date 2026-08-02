@@ -58,6 +58,8 @@ export function OPCaseSheet({ onBack }: OPCaseSheetProps) {
   const [diagnosisQuery, setDiagnosisQuery] = useState('');
   const [diagnosisSuggestions, setDiagnosisSuggestions] = useState<any[]>([]);
   const [showDiagnosisSuggestions, setShowDiagnosisSuggestions] = useState(false);
+  const [clinicalAlerts, setClinicalAlerts] = useState<any[]>([]);
+  const [alertLoading, setAlertLoading] = useState(false);
   const medicineInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -396,6 +398,34 @@ export function OPCaseSheet({ onBack }: OPCaseSheetProps) {
 
     return () => clearTimeout(t);
   }, [formData.uhid]);
+
+  useEffect(() => {
+    const debounce = setTimeout(async () => {
+      if (!formData.uhid?.trim() && medicines.length === 0) {
+        setClinicalAlerts([]);
+        return;
+      }
+
+      setAlertLoading(true);
+      try {
+        const payload = {
+          uhid: formData.uhid,
+          medicineDetails: medicines,
+          prescription: formData.prescription
+        };
+        const resp: any = await ApiClient.evaluateClinicalAlerts(payload);
+        if (resp && resp.success) {
+          setClinicalAlerts(Array.isArray(resp.alerts) ? resp.alerts : []);
+        }
+      } catch (err) {
+        console.error('Failed to evaluate clinical alerts:', err);
+      } finally {
+        setAlertLoading(false);
+      }
+    }, 600);
+
+    return () => clearTimeout(debounce);
+  }, [formData.uhid, medicines, formData.prescription]);
 
   useEffect(() => {
     if (!diagnosisQuery.trim()) {
@@ -945,6 +975,37 @@ export function OPCaseSheet({ onBack }: OPCaseSheetProps) {
                           </div>
                         ))}
                       </div>
+                    </div>
+                  )}
+
+                  {(clinicalAlerts.length > 0 || alertLoading) && (
+                    <div className="rounded-lg border border-orange-200 bg-orange-50 p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div>
+                          <p className="text-sm font-semibold text-orange-700">Clinical Alerts</p>
+                          <p className="text-xs text-orange-600">Review potential patient, medication, and dosage risks before saving.</p>
+                        </div>
+                        {alertLoading && <span className="text-xs text-orange-700">Evaluating…</span>}
+                      </div>
+                      {clinicalAlerts.length === 0 && !alertLoading ? (
+                        <p className="text-sm text-orange-700">No alerts detected for current prescription.</p>
+                      ) : (
+                        <div className="space-y-3">
+                          {clinicalAlerts.map((alert, idx) => (
+                            <div key={idx} className="rounded-xl bg-white border border-orange-200 p-3">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className={`text-sm font-semibold ${alert.severity === 'critical' ? 'text-red-700' : alert.severity === 'warning' ? 'text-orange-700' : 'text-slate-700'}`}>
+                                  {alert.title}
+                                </span>
+                                <span className={`text-[11px] font-semibold uppercase tracking-wide ${alert.severity === 'critical' ? 'text-red-600' : alert.severity === 'warning' ? 'text-orange-600' : 'text-slate-500'}`}>
+                                  {alert.severity}
+                                </span>
+                              </div>
+                              <p className="text-sm text-gray-600 mt-1">{alert.description}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
 

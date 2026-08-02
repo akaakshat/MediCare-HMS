@@ -86,14 +86,15 @@ AuditLogSchema.statics.log = async function(
   errorMessage = null
 ) {
   try {
+    const performedByData = performedBy || {};
     const auditLog = new this({
       action,
       userId,
       performedBy: {
-        userId: performedBy._id || performedBy.userId,
-        email: performedBy.email,
-        role: performedBy.role,
-        name: performedBy.name
+        userId: performedByData._id || performedByData.userId || performedByData.id,
+        email: performedByData.email || performedByData.userEmail || performedByData.emailAddress,
+        role: performedByData.role,
+        name: performedByData.name || performedByData.fullName || performedByData.displayName
       },
       targetType,
       targetId,

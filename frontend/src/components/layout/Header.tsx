@@ -7,6 +7,7 @@ interface HeaderProps {
   onMenuClick: () => void;
   activeModule: string;
   onModuleChange?: (moduleId: string) => void;
+  networkStatus?: 'online' | 'offline' | 'syncing';
   theme?: 'light' | 'dark';
   onThemeToggle?: () => void;
 }
@@ -18,7 +19,7 @@ interface GlobalSearchResult {
   id: string;
 }
 
-export function Header({ onMenuClick, activeModule, onModuleChange, theme = 'light', onThemeToggle }: HeaderProps) {
+export function Header({ onMenuClick, activeModule, onModuleChange, networkStatus = 'online', theme = 'light', onThemeToggle }: HeaderProps) {
   const currentUser = ApiClient.getCurrentUser();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<GlobalSearchResult[]>([]);
@@ -255,23 +256,22 @@ export function Header({ onMenuClick, activeModule, onModuleChange, theme = 'lig
                   // ignore, we'll fallback to local
                 }
                 if (notifications.length === 0) {
-                  // Provide a friendly fallback so the UI feels responsive
                   setNotifications([
                     { id: '1', title: 'Welcome', message: 'Welcome back to the system', time: 'now' },
                   ]);
                 }
               }}
-              className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              aria-haspopup="true"
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
               title="Notifications"
+              aria-label="Notifications"
             >
               <Bell className="w-5 h-5 text-gray-600" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
             </button>
+            <span className={`absolute -right-1 -top-1 inline-flex h-2.5 w-2.5 rounded-full ${networkStatus === 'online' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
 
             {notifOpen && (
               <div className="absolute right-0 mt-2 w-72 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                <div className="p-3 border-b">Notifications</div>
+                <div className="p-3 border-b font-semibold">Notifications</div>
                 <div className="max-h-60 overflow-auto">
                   {notifications.length === 0 ? (
                     <div className="p-3 text-sm text-gray-500">No notifications</div>

@@ -3,6 +3,7 @@ const Bill = require('../models/Bill');
 const mdmIntegration = require('../utils/mdmIntegration');
 const mongoose = require('mongoose');
 const { updatePatientActivityByUHID } = require('../utils/patientActivity');
+const { generateClinicalAlerts } = require('../services/clinicalAlertService');
 
 const escapeRegex = (text) => {
   if (typeof text !== 'string') return '';
@@ -226,11 +227,13 @@ exports.createEMRRecord = async (req, res) => {
       .populate('prescribedMedicineIds', 'name code')
       .lean();
 
+    const alerts = await generateClinicalAlerts(data);
+
     console.log('EMR record saved with id:', record._id, 'doctor:', record.doctor);
     if (data.uhid) {
       await updatePatientActivityByUHID(data.uhid);
     }
-    res.status(201).json({ success: true, record: populatedRecord || record });
+    res.status(201).json({ success: true, record: populatedRecord || record, alerts });
   } catch (err) {
     console.error('Error creating EMR record:', err);
     console.error('Error details:', err.message);
@@ -314,11 +317,13 @@ exports.updateEMRRecord = async (req, res) => {
       .populate('prescribedMedicineIds', 'name code')
       .lean();
 
+    const alerts = await generateClinicalAlerts(payload);
+
     if (record.uhid) {
       await updatePatientActivityByUHID(record.uhid);
     }
 
-    res.json({ success: true, record: updated });
+    res.json({ success: true, record: updated, alerts });
   } catch (err) {
     console.error('Error updating EMR record:', err);
     res.status(500).json({ success: false, message: 'Error updating EMR record', error: err.message });

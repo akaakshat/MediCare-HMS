@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, Calendar, Stethoscope, FileText, Pill, CreditCard, BarChart3, UserPlus, ClipboardList, Activity, Settings as SettingsIcon } from 'lucide-react';
+import { Users, Calendar, Stethoscope, FileText, Pill, CreditCard, BarChart3, UserPlus, ClipboardList, Activity, TrendingUp, Settings as SettingsIcon } from 'lucide-react';
 import { Sidebar } from './components/layout/Sidebar';
 import { Header } from './components/layout/Header';
 import { StatsCard } from './components/widgets/StatsCard';
@@ -11,9 +11,11 @@ import { OPCaseSheet } from './components/modules/emr/OPCaseSheet';
 import { InventoryList } from './components/modules/pharmacy/InventoryList';
 import { OPDBilling } from './components/modules/billing/OPDBilling';
 import { MISReports } from './components/modules/reports/MISReports';
+import { DoctorPerformanceAnalytics } from './components/modules/analytics/DoctorPerformanceAnalytics';
 import { IcdManagement } from './components/modules/icd/IcdManagement';
 import { ClinicUserManagement } from './components/modules/admin/ClinicUserManagement';
 import { SupportArticleManagement } from './components/modules/admin/SupportArticleManagement';
+import { AuditLogs } from './components/modules/admin/AuditLogs.tsx';
 import { NoAccessPage } from './components/modules/NoAccessPage';
 import { Login } from './components/auth/Login';
 import Settings from './components/modules/settings/Settings';
@@ -21,6 +23,10 @@ import { ITSupportAssistant } from './components/common/ITSupportAssistant';
 import { PageSkeleton } from './components/ui/LoadingSkeleton';
 import { ApiClient } from './utils/api';
 import { hasFeatureAccess } from './utils/permissions';
+import { Toaster } from 'sonner';
+import { useNetworkMonitor } from './services/networkMonitor';
+import { initBackgroundSync } from './services/backgroundSyncService';
+import { fetchSyncStatus, SyncStatus } from './services/syncStatusService';
 
 const API_BASE_URL = 'http://localhost:5000/api';
 
@@ -52,15 +58,17 @@ const moduleFeatureRequirements: Record<string, string[]> = {
   billing: ['billing.view'],
   icd: ['icd.view'],
   reports: ['reports.view'],
+  analytics: ['reports.view'],
   admin: ['users.view'],
   'clinic-users': ['users.view'],
+  'audit-logs': ['audit.view'],
   settings: [],
   dashboard: [],
 };
 
 const roleModuleAccess: Record<string, string[]> = {
-  admin: ['dashboard', 'patients', 'appointments', 'doctors', 'emr', 'pharmacy', 'billing', 'icd', 'reports', 'clinic-users', 'settings'],
-  doctor: ['dashboard', 'patients', 'appointments', 'doctors', 'emr', 'icd', 'settings'],
+  admin: ['dashboard', 'patients', 'appointments', 'doctors', 'emr', 'pharmacy', 'billing', 'icd', 'reports', 'analytics', 'clinic-users', 'audit-logs', 'settings'],
+  doctor: ['dashboard', 'patients', 'appointments', 'doctors', 'emr', 'icd', 'analytics', 'settings'],
   nurse: ['dashboard', 'patients', 'appointments', 'emr', 'icd', 'reports', 'settings'],
   receptionist: ['dashboard', 'patients', 'appointments', 'doctors', 'pharmacy', 'billing', 'icd', 'reports', 'settings'],
   staff: ['dashboard', 'patients', 'appointments', 'emr', 'icd', 'reports', 'settings'],
@@ -96,7 +104,6 @@ const getModuleAccessState = (
     enabled: hasAccess,
   };
 };
-import { Toaster } from 'sonner';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -114,7 +121,14 @@ export default function App() {
     doctorsCount: 0,
     revenueToday: 0,
   });
+  const [alertSummary, setAlertSummary] = useState({
+    overdueFollowUps: 0,
+    followUpsDueSoon: 0,
+    highRiskPatients: 0,
+  });
   const [doctorAvailability, setDoctorAvailability] = useState<string[]>([]);
+  const networkStatus = useNetworkMonitor();
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>({ pending: 0, processing: 0, failed: 0, synced: 0, lastSuccessfulSync: null });
 
   const formatScheduleItem = (slot: string) => {
     const rangeMatch = slot.match(/^(\d{2}\/\d{2}\/\d{4}) to (\d{2}\/\d{2}\/\d{4}) (\d{1,2}:\d{2} (?:AM|PM)) - (\d{1,2}:\d{2} (?:AM|PM))$/i);
@@ -167,6 +181,26 @@ export default function App() {
     window.addEventListener('auth:invalid', onAuthInvalid as EventListener);
     return () => window.removeEventListener('auth:invalid', onAuthInvalid as EventListener);
   }, []);
+
+  useEffect(() => {
+    const syncWithBackground = async () => {
+      if (!isAuthenticated) return;
+      await initBackgroundSync();
+    };
+    syncWithBackground();
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    const refreshSyncStatus = async () => {
+      if (!isAuthenticated) return;
+      const status = await fetchSyncStatus();
+      if (status) setSyncStatus(status);
+    };
+
+    refreshSyncStatus();
+    const interval = setInterval(refreshSyncStatus, 30000);
+    return () => clearInterval(interval);
+  }, [isAuthenticated, networkStatus]);
 
   const checkSystemHealth = async () => {
     try {
@@ -263,8 +297,9 @@ export default function App() {
         const bPromise = canReadBills
           ? ApiClient.getBills().catch(() => ({ bills: [] }))
           : Promise.resolve({ bills: [] });
+        const alertsPromise = ApiClient.get('/alerts/summary').catch(() => ({ summary: {} }));
 
-        const [pRes, aRes, dRes, bRes] = await Promise.all([pPromise, aPromise, dPromise, bPromise]);
+        const [pRes, aRes, dRes, bRes, alertsRes] = await Promise.all([pPromise, aPromise, dPromise, bPromise, alertsPromise]);
 
         const patientsCount = pRes?.patients?.length ?? (Array.isArray(pRes) ? pRes.length : 0);
         const appointmentsCount = aRes?.appointments?.length ?? (Array.isArray(aRes) ? aRes.length : 0);
@@ -287,6 +322,11 @@ export default function App() {
         }
 
         setStatsState({ patientsCount, appointmentsCount, doctorsCount, revenueToday });
+        setAlertSummary({
+          overdueFollowUps: Number(alertsRes?.summary?.overdueFollowUps ?? 0),
+          followUpsDueSoon: Number(alertsRes?.summary?.followUpsDueSoon ?? 0),
+          highRiskPatients: Number(alertsRes?.summary?.highRiskPatients ?? 0),
+        });
       } catch (err) {
         console.error('Error fetching metrics:', err);
       }
@@ -362,9 +402,11 @@ export default function App() {
     { id: 'billing', title: 'Billing & Payments', icon: CreditCard, color: 'bg-yellow-500', component: OPDBilling },
     { id: 'icd', title: 'ICD Management', icon: FileText, color: 'bg-teal-500', component: IcdManagement },
     { id: 'reports', title: 'Reports & Analytics', icon: BarChart3, color: 'bg-indigo-500', component: MISReports },
+    { id: 'analytics', title: 'Doctor Analytics', icon: TrendingUp, color: 'bg-sky-500', component: DoctorPerformanceAnalytics },
     ...(role === 'admin'
       ? [
           { id: 'clinic-users', title: 'User Management', icon: UserPlus, color: 'bg-red-500', component: ClinicUserManagement },
+          { id: 'audit-logs', title: 'Audit Trail', icon: Activity, color: 'bg-slate-500', component: AuditLogs },
           { id: 'support-articles', title: 'Support Articles', icon: FileText, color: 'bg-cyan-600', component: SupportArticleManagement },
         ]
       : []),
@@ -415,6 +457,21 @@ export default function App() {
               )}
             </div>
           )}
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+            <div className="bg-white rounded-lg shadow border border-gray-200 p-6">
+              <p className="text-sm text-gray-500">Overdue Follow-ups</p>
+              <h3 className="text-2xl font-semibold text-gray-900 mt-2">{alertSummary.overdueFollowUps}</h3>
+            </div>
+            <div className="bg-white rounded-lg shadow border border-gray-200 p-6">
+              <p className="text-sm text-gray-500">Follow-ups Due Soon</p>
+              <h3 className="text-2xl font-semibold text-gray-900 mt-2">{alertSummary.followUpsDueSoon}</h3>
+            </div>
+            <div className="bg-white rounded-lg shadow border border-gray-200 p-6">
+              <p className="text-sm text-gray-500">High-risk Patients</p>
+              <h3 className="text-2xl font-semibold text-gray-900 mt-2">{alertSummary.highRiskPatients}</h3>
+            </div>
+          </div>
 
           <ITSupportAssistant
             role={role}
@@ -591,9 +648,33 @@ export default function App() {
           onModuleChange={setActiveModule}
           theme={theme}
           onThemeToggle={toggleTheme}
+          networkStatus={networkStatus}
         />
         
         <main className="flex-1 overflow-y-auto p-6 bg-gray-50 text-gray-900 dark:bg-slate-950 dark:text-slate-100">
+          <div className="mb-6 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-700 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-center gap-3">
+                <span className={`inline-flex h-2.5 w-2.5 rounded-full ${networkStatus === 'online' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                <span className="font-semibold">Network:</span>
+                <span>{networkStatus === 'online' ? 'Online' : 'Offline'}</span>
+              </div>
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                <div className="rounded-lg bg-slate-50 p-2 text-xs font-medium uppercase tracking-wide text-slate-500 dark:bg-slate-800 dark:text-slate-300">
+                  Pending: {syncStatus.pending}
+                </div>
+                <div className="rounded-lg bg-slate-50 p-2 text-xs font-medium uppercase tracking-wide text-slate-500 dark:bg-slate-800 dark:text-slate-300">
+                  Processing: {syncStatus.processing}
+                </div>
+                <div className="rounded-lg bg-slate-50 p-2 text-xs font-medium uppercase tracking-wide text-slate-500 dark:bg-slate-800 dark:text-slate-300">
+                  Failed: {syncStatus.failed}
+                </div>
+                <div className="rounded-lg bg-slate-50 p-2 text-xs font-medium uppercase tracking-wide text-slate-500 dark:bg-slate-800 dark:text-slate-300">
+                  Last sync: {syncStatus.lastSuccessfulSync ? new Date(syncStatus.lastSuccessfulSync).toLocaleString() : 'Never'}
+                </div>
+              </div>
+            </div>
+          </div>
           {renderContent()}
         </main>
       </div>

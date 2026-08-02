@@ -379,6 +379,19 @@ exports.updateClinicUser = async (req, res) => {
     await user.save();
     console.log('User updated successfully in database');
 
+    await AuditLog.log(
+      'UPDATE',
+      user._id,
+      req.user,
+      'USER',
+      user._id,
+      null,
+      `User profile updated: ${user.name} (${user.email})`,
+      req.ip,
+      req.headers['user-agent'],
+      { role: user.role, updatedFields: Object.keys(commonFields || {}) }
+    );
+
     // Update role-specific profile if provided
     if (roleSpecificFields) {
       let roleProfile;

@@ -18,6 +18,37 @@ interface Medicine {
   price: number;
   expiry: string;
   status?: string;
+  sku?: string;
+  createdAt?: string;
+}
+
+interface InventorySummary {
+  totalItems: number;
+  totalStock: number;
+  totalValue: number;
+  lowStock: number;
+  criticalStock: number;
+}
+
+interface ExpiryAlert {
+  _id: string;
+  name: string;
+  stock: number;
+  expiryDate: string;
+  status: string;
+}
+
+interface TopMover {
+  medicineId: string;
+  name: string;
+  category: string;
+  totalSold: number;
+  currentStock: number;
+}
+
+interface SalesTrendPoint {
+  _id: string;
+  totalSold: number;
 }
 
 export function InventoryList({ onBack }: InventoryListProps) {
@@ -34,9 +65,15 @@ export function InventoryList({ onBack }: InventoryListProps) {
     price: 0,
     expiry: ''
   });
+  const [summary, setSummary] = useState<InventorySummary | null>(null);
+  const [expiryAlerts, setExpiryAlerts] = useState<ExpiryAlert[]>([]);
+  const [topMovers, setTopMovers] = useState<TopMover[]>([]);
+  const [salesTrend, setSalesTrend] = useState<SalesTrendPoint[]>([]);
+  const [saleData, setSaleData] = useState({ medicineId: '', quantity: 1, department: '' });
 
   useEffect(() => {
     fetchMedicines();
+    fetchInventorySummary();
   }, []);
 
   const fetchMedicines = async () => {
@@ -44,10 +81,9 @@ export function InventoryList({ onBack }: InventoryListProps) {
       setLoading(true);
       const response = await ApiClient.get('/pharmacy');
       if (response.success) {
-        // Calculate status for each medicine
         const medicinesWithStatus = response.items.map((med: Medicine) => ({
           ...med,
-          status: med.stock === 0 ? 'Out of Stock' : 
+          status: med.stock === 0 ? 'Out of Stock' :
                   med.stock < med.minStock ? 'Low Stock' : 'In Stock'
         }));
         setMedicines(medicinesWithStatus);
@@ -57,6 +93,20 @@ export function InventoryList({ onBack }: InventoryListProps) {
       toast.error('Failed to load inventory');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchInventorySummary = async () => {
+    try {
+      const response = await ApiClient.getInventorySummary();
+      if (response.success) {
+        setSummary(response.summary);
+        setExpiryAlerts(response.expiryAlerts || []);
+        setTopMovers(response.topMovers || []);
+        setSalesTrend(response.salesTrend || []);
+      }
+    } catch (error: any) {
+      console.error('Error fetching inventory summary:', error);
     }
   };
 
@@ -88,10 +138,8 @@ export function InventoryList({ onBack }: InventoryListProps) {
 
   const openDialog = (medicine?: Medicine) => {
     if (medicine) {
-      // normalize id to ensure updates use the correct _id when present
       const normalized = { ...medicine, id: (medicine as any)._id || medicine.id } as Medicine;
       setEditingMedicine(normalized);
-      // avoid copying internal _id into formData; only copy editable fields
       setFormData({
         name: medicine.name,
         category: (medicine as any).category,
@@ -112,6 +160,26 @@ export function InventoryList({ onBack }: InventoryListProps) {
       });
     }
     setShowDialog(true);
+  };
+
+  const handleRecordSale = async () => {
+    try {
+      if (!saleData.medicineId || saleData.quantity <= 0) {
+        toast.error('Select a medicine and enter a positive quantity');
+        return;
+      }
+
+      const response = await ApiClient.recordPharmacySale(saleData);
+      if (response.success) {
+        toast.success('Sale recorded and stock updated');
+        fetchMedicines();
+        fetchInventorySummary();
+        setSaleData({ medicineId: '', quantity: 1, department: '' });
+      }
+    } catch (error: any) {
+      console.error('Error recording sale:', error);
+      toast.error(error.message || 'Failed to record sale');
+    }
   };
 
   const closeDialog = () => {
@@ -155,6 +223,7 @@ export function InventoryList({ onBack }: InventoryListProps) {
     { label: 'Low Stock', value: lowStockCount.toString(), icon: AlertTriangle, color: 'text-yellow-600' },
     { label: 'Out of Stock', value: outOfStockCount.toString(), icon: AlertTriangle, color: 'text-red-600' },
     { label: 'Total Value', value: `₹${(totalValue / 100000).toFixed(1)}L`, icon: TrendingUp, color: 'text-green-600' },
+    { label: 'Expiry Alerts', value: expiryAlerts.length.toString(), icon: AlertTriangle, color: 'text-orange-600' },
   ];
 
   if (loading) {
@@ -177,43 +246,177 @@ export function InventoryList({ onBack }: InventoryListProps) {
           </button>
           <div>
             <h2 className="text-gray-900">Pharmacy & Inventory</h2>
-            <p className="text-sm text-gray-500">Manage medicine stock and inventory</p>
+            <p className="text-sm text-gray-500">Manage medicine stock, sales, and reorder intelligence</p>
           </div>
         </div>
-        <button 
-          onClick={() => openDialog()}
-          className="bg-pink-600 text-white px-4 py-2 rounded-lg hover:bg-pink-700 transition-colors flex items-center gap-2"
-        >
-          <Plus className="w-4 h-4" />
-          Add Medicine
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={() => openDialog()}
+            className="bg-pink-600 text-white px-4 py-2 rounded-lg hover:bg-pink-700 transition-colors flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Add Medicine
+          </button>
+          <button
+            onClick={fetchInventorySummary}
+            className="bg-slate-100 text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-200 transition-colors"
+          >
+            Refresh Summary
+          </button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {statsData.map((stat, index) => (
-          <div key={index} className="bg-white rounded-lg shadow border border-gray-200 p-4">
-            <div className="flex items-center gap-3 mb-2">
-              <stat.icon className={`w-5 h-5 ${stat.color}`} />
-              <h4 className="text-gray-600">{stat.label}</h4>
+      <div className="grid grid-cols-1 xl:grid-cols-[2fr_1fr] gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {statsData.map((stat, index) => (
+            <div key={index} className="bg-white rounded-lg shadow border border-gray-200 p-4">
+              <div className="flex items-center gap-3 mb-2">
+                <stat.icon className={`w-5 h-5 ${stat.color}`} />
+                <h4 className="text-gray-600">{stat.label}</h4>
+              </div>
+              <p className="text-gray-900">{stat.value}</p>
             </div>
-            <p className="text-gray-900">{stat.value}</p>
+          ))}
+        </div>
+
+        <div className="space-y-4">
+          <div className="bg-white rounded-lg shadow border border-gray-200 p-4">
+            <h4 className="text-gray-900 font-semibold mb-3">Expiry Risk</h4>
+            {expiryAlerts.length === 0 ? (
+              <p className="text-sm text-gray-500">No items expiring in the next 30 days.</p>
+            ) : (
+              <ul className="space-y-3">
+                {expiryAlerts.slice(0, 5).map((item) => (
+                  <li key={item._id} className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="font-medium text-gray-800">{item.name}</p>
+                      <p className="text-sm text-gray-500">Expiring {formatDateDDMMYYYY(item.expiryDate)}</p>
+                    </div>
+                    <span className="text-xs font-semibold text-orange-700 bg-orange-100 px-2 py-1 rounded-full">
+                      {item.status}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
-        ))}
+
+          <div className="bg-white rounded-lg shadow border border-gray-200 p-4">
+            <h4 className="text-gray-900 font-semibold mb-3">Top Movers (30d)</h4>
+            {topMovers.length === 0 ? (
+              <p className="text-sm text-gray-500">No sales data yet.</p>
+            ) : (
+              <ul className="space-y-3">
+                {topMovers.slice(0, 4).map((item) => (
+                  <li key={item.medicineId} className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="font-medium text-gray-800">{item.name}</p>
+                      <p className="text-sm text-gray-500">Sold {item.totalSold} units</p>
+                    </div>
+                    <span className="text-sm text-gray-600">Stock {item.currentStock}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="bg-white rounded-lg shadow border border-gray-200 p-6">
         <div className="mb-6">
-          <div className="flex items-center gap-2 bg-gray-100 rounded-lg px-4 py-2">
-            <Search className="w-4 h-4 text-gray-500" />
-            <input
-              type="text"
-              placeholder="Search medicines..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="bg-transparent border-none outline-none text-sm flex-1"
-            />
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center gap-2 bg-gray-100 rounded-lg px-4 py-2 flex-1">
+              <Search className="w-4 h-4 text-gray-500" />
+              <input
+                type="text"
+                placeholder="Search medicines..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="bg-transparent border-none outline-none text-sm flex-1"
+              />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:w-auto w-full">
+              <div className="bg-white rounded-lg border border-gray-200 px-4 py-3">
+                <p className="text-xs text-gray-500">Total Stock</p>
+                <p className="text-lg font-semibold text-gray-900">{summary ? summary.totalStock : '-'}</p>
+              </div>
+              <div className="bg-white rounded-lg border border-gray-200 px-4 py-3">
+                <p className="text-xs text-gray-500">Low Stock</p>
+                <p className="text-lg font-semibold text-gray-900">{summary ? summary.lowStock : '-'}</p>
+              </div>
+              <div className="bg-white rounded-lg border border-gray-200 px-4 py-3">
+                <p className="text-xs text-gray-500">Critical</p>
+                <p className="text-lg font-semibold text-red-600">{summary ? summary.criticalStock : '-'}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-[1.4fr_0.6fr]">
+            <div className="bg-slate-50 rounded-lg border border-slate-200 p-4">
+              <h4 className="text-gray-900 font-semibold mb-3">Inventory Sales Trend</h4>
+              {salesTrend.length === 0 ? (
+                <p className="text-sm text-gray-500">Sales trend data will appear after sales are recorded.</p>
+              ) : (
+                <div className="space-y-2">
+                  {salesTrend.slice(-7).map((point) => (
+                    <div key={point._id} className="flex items-center justify-between text-sm text-gray-700">
+                      <span>{point._id}</span>
+                      <span className="font-semibold">{point.totalSold}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="bg-slate-50 rounded-lg border border-slate-200 p-4">
+              <h4 className="text-gray-900 font-semibold mb-3">Record Sale</h4>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm text-gray-700 mb-1">Medicine</label>
+                  <select
+                    value={saleData.medicineId}
+                    onChange={(e) => setSaleData({ ...saleData, medicineId: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  >
+                    <option value="">Select medicine</option>
+                    {medicines.map((item) => (
+                      <option key={item._id || item.id} value={item._id || item.id}>
+                        {item.name} ({item.category || 'Uncategorized'})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-700 mb-1">Quantity</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={saleData.quantity}
+                    onChange={(e) => setSaleData({ ...saleData, quantity: Number(e.target.value) })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-700 mb-1">Department</label>
+                  <input
+                    type="text"
+                    value={saleData.department}
+                    onChange={(e) => setSaleData({ ...saleData, department: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleRecordSale}
+                  className="w-full bg-pink-600 text-white px-4 py-2 rounded-lg hover:bg-pink-700 transition-colors"
+                >
+                  Record Sale
+                </button>
+              </div>
+            </div>
           </div>
         </div>
+      </div>
 
         {filteredMedicines.length === 0 ? (
           <div className="text-center py-12">

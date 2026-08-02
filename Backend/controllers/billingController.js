@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Bill = require('../models/Bill');
+const AuditLog = require('../models/AuditLog');
 const mdmIntegration = require('../utils/mdmIntegration');
 const { updatePatientActivity, updatePatientActivityByUHID } = require('../utils/patientActivity');
 
@@ -280,6 +281,19 @@ exports.createBill = async (req, res) => {
     const bill = new Bill({ ...req.body, createdBy: req.user?.id });
     await bill.save();
 
+    await AuditLog.log(
+      'CREATE',
+      bill._id,
+      req.user,
+      'BILLING',
+      bill._id,
+      null,
+      `Billing entry created: ${bill.invoiceId || bill._id}`,
+      req.ip,
+      req.headers['user-agent'],
+      { amount: bill.amount, uhid: bill.uhid }
+    );
+
     // Populate MDM references for response
     const populatedBill = await Bill.findById(bill._id)
       .populate('billStatusId', 'name code')
@@ -443,6 +457,19 @@ exports.updateBill = async (req, res) => {
       await updatePatientActivityByUHID(bill.uhid);
     }
 
+    await AuditLog.log(
+      'UPDATE',
+      bill._id,
+      req.user,
+      'BILLING',
+      bill._id,
+      null,
+      `Billing entry updated: ${bill.invoiceId || bill._id}`,
+      req.ip,
+      req.headers['user-agent'],
+      { amount: bill.amount, uhid: bill.uhid }
+    );
+
     res.json({ success: true, bill: populatedBill || bill });
   } catch (err) {
     console.error('Error updating bill:', err);
@@ -455,7 +482,22 @@ exports.updateBill = async (req, res) => {
 
 exports.deleteBill = async (req, res) => {
   try {
-    await Bill.findByIdAndDelete(req.params.id);
+    const deleted = await Bill.findByIdAndDelete(req.params.id);
+    if (!deleted) return res.status(404).json({ success: false, message: 'Bill not found' });
+
+    await AuditLog.log(
+      'DELETE',
+      deleted._id,
+      req.user,
+      'BILLING',
+      deleted._id,
+      null,
+      `Billing entry deleted: ${deleted.invoiceId || deleted._id}`,
+      req.ip,
+      req.headers['user-agent'],
+      { amount: deleted.amount, uhid: deleted.uhid }
+    );
+
     res.json({ success: true, message: 'Deleted' });
   } catch (err) {
     console.error('Error deleting bill:', err);

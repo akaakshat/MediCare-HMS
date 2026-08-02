@@ -15,13 +15,17 @@ const appointmentRoutes = require('./routes/appointments');
 const doctorsRoutes = require('./routes/doctors');
 const billingRoutes = require('./routes/billing');
 const emrRoutes = require('./routes/emr');
+const alertsRoutes = require('./routes/alerts');
 const pharmacyRoutes = require('./routes/pharmacy');
+const inventoryRoutes = require('./routes/inventory');
 const icdRoutes = require('./routes/icd');
+const analyticsRoutes = require('./routes/analytics');
 const roleRoutes = require('./routes/roles');
 const rbacRoutes = require('./routes/rbac');
 const mdmRoutes = require('./routes/mdm');
 const supportArticleRoutes = require('./routes/supportArticles');
 const supportAssistantRoutes = require('./routes/supportAssistant');
+const syncRoutes = require('./routes/sync');
 const { scheduleInactivePatientJob, markInactivePatients } = require('./jobs/inactivePatientJob');
 const { importIcdCodes } = require('./scripts/import-icd10');
 const { importMedicineFormulas } = require('./scripts/import-medicine-formulas');
@@ -84,14 +88,18 @@ app.use('/api/appointments', appointmentRoutes);
 app.use('/api/doctors', doctorsRoutes);
 app.use('/api/billing', billingRoutes);
 app.use('/api/emr', emrRoutes);
+app.use('/api/alerts', alertsRoutes);
 app.use('/api/pharmacy', pharmacyRoutes);
+app.use('/api/inventory', inventoryRoutes);
 app.use('/api/icd', icdRoutes);
+app.use('/api/analytics', analyticsRoutes);
 app.use('/api/roles', roleRoutes); // Role Management routes
 app.use('/api/rbac', rbacRoutes); // RBAC routes
 app.use('/api/mdm', mdmRoutes); // Feature access and MDM endpoints
 app.use('/api/masters', mdmRoutes); // Backward-compatible alias for existing UI/docs
 app.use('/api/support-articles', supportArticleRoutes); // IT support knowledge base
 app.use('/api/support-assistant', supportAssistantRoutes); // AI-assisted system support
+app.use('/api/sync', syncRoutes); // Offline sync persistence and processing
 
 // Health check
 app.get('/api/health', (req, res) => res.json({ ok: true, time: new Date() }));

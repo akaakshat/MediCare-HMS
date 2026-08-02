@@ -1,5 +1,6 @@
 const Patient = require('../models/Patient');
 const Appointment = require('../models/Appoinment');
+const AuditLog = require('../models/AuditLog');
 const mdmIntegration = require('../utils/mdmIntegration');
 const escapeRegex = (text) => (typeof text === 'string' ? text.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&') : text);
 
@@ -84,6 +85,19 @@ exports.createPatient = async (req, res) => {
     const saved = await patient.save();
     const populated = await Patient.findById(saved._id)
       .populate('genderId bloodGroupId maritalStatusId patientTypeId statusId');
+
+    await AuditLog.log(
+      'CREATE',
+      saved._id,
+      req.user,
+      'PATIENT',
+      saved._id,
+      null,
+      `Patient created: ${saved.name || saved.uhid || saved._id}`,
+      req.ip,
+      req.headers['user-agent'],
+      { uhid: saved.uhid, phone: saved.phone }
+    );
 
     res.status(201).json({ success: true, patient: populated, warning });
   } catch (err) {
@@ -289,6 +303,20 @@ exports.updatePatient = async (req, res) => {
 
     const updated = await Patient.findByIdAndUpdate(req.params.id, payload, { new: true });
     if (!updated) return res.status(404).json({ success: false, message: 'Patient not found' });
+
+    await AuditLog.log(
+      'UPDATE',
+      updated._id,
+      req.user,
+      'PATIENT',
+      updated._id,
+      null,
+      `Patient updated: ${updated.name || updated.uhid || updated._id}. Updated fields: ${Object.keys(payload).join(', ')}`,
+      req.ip,
+      req.headers['user-agent'],
+      { uhid: updated.uhid, fields: Object.keys(payload) }
+    );
+
     const populated = await Patient.findById(updated._id)
       .populate('genderId bloodGroupId maritalStatusId patientTypeId statusId');
     res.json({ success: true, patient: populated });
@@ -302,6 +330,20 @@ exports.deletePatient = async (req, res) => {
   try {
     const deleted = await Patient.findByIdAndDelete(req.params.id);
     if (!deleted) return res.status(404).json({ success: false, message: 'Patient not found' });
+
+    await AuditLog.log(
+      'DELETE',
+      deleted._id,
+      req.user,
+      'PATIENT',
+      deleted._id,
+      null,
+      `Patient deleted: ${deleted.name || deleted.uhid || deleted._id}`,
+      req.ip,
+      req.headers['user-agent'],
+      { uhid: deleted.uhid }
+    );
+
     res.json({ success: true, message: 'Patient deleted' });
   } catch (err) {
     console.error(err);

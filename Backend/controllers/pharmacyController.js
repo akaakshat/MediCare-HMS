@@ -1,4 +1,5 @@
 const PharmacyItem = require('../models/PharmacyItem');
+const AuditLog = require('../models/AuditLog');
 const mdmIntegration = require('../utils/mdmIntegration');
 
 const normalizeItem = (item) => {
@@ -68,6 +69,20 @@ exports.createItem = async (req, res) => {
 
     const item = new PharmacyItem({ ...payload, createdBy: req.user?.id });
     await item.save();
+
+    await AuditLog.log(
+      'CREATE',
+      item._id,
+      req.user,
+      'MASTER_DATA',
+      item._id,
+      null,
+      `Pharmacy item created: ${item.name || item.sku || item._id}`,
+      req.ip,
+      req.headers['user-agent'],
+      { sku: item.sku, stock: item.stock }
+    );
+
     res.status(201).json({ success: true, item: normalizeItem(item) });
   } catch (err) {
     console.error('Error creating pharmacy item:', err);
@@ -115,6 +130,20 @@ exports.updateItem = async (req, res) => {
 
     const item = await PharmacyItem.findByIdAndUpdate(req.params.id, payload, { new: true });
     if (!item) return res.status(404).json({ success: false, message: 'Item not found' });
+
+    await AuditLog.log(
+      'UPDATE',
+      item._id,
+      req.user,
+      'MASTER_DATA',
+      item._id,
+      null,
+      `Pharmacy item updated: ${item.name || item.sku || item._id}`,
+      req.ip,
+      req.headers['user-agent'],
+      { sku: item.sku, fields: Object.keys(payload) }
+    );
+
     res.json({ success: true, item: normalizeItem(item) });
   } catch (err) {
     console.error('Error updating pharmacy item:', err);
@@ -124,7 +153,22 @@ exports.updateItem = async (req, res) => {
 
 exports.deleteItem = async (req, res) => {
   try {
-    await PharmacyItem.findByIdAndDelete(req.params.id);
+    const deleted = await PharmacyItem.findByIdAndDelete(req.params.id);
+    if (!deleted) return res.status(404).json({ success: false, message: 'Item not found' });
+
+    await AuditLog.log(
+      'DELETE',
+      deleted._id,
+      req.user,
+      'MASTER_DATA',
+      deleted._id,
+      null,
+      `Pharmacy item deleted: ${deleted.name || deleted.sku || deleted._id}`,
+      req.ip,
+      req.headers['user-agent'],
+      { sku: deleted.sku }
+    );
+
     res.json({ success: true, message: 'Deleted' });
   } catch (err) {
     console.error('Error deleting pharmacy item:', err);

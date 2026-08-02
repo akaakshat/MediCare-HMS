@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { Home, Users, Calendar, Stethoscope, FileText, Pill, CreditCard, BarChart3, Settings, LogOut, Shield } from 'lucide-react';
+import { Home, Users, Calendar, Stethoscope, FileText, Pill, CreditCard, BarChart3, TrendingUp, Settings, LogOut, Shield, Activity } from 'lucide-react';
 import { AuthContext } from '../../context/AuthContext';
 import { hasFeatureAccess } from '../../utils/permissions';
 
@@ -20,6 +20,8 @@ const featurePermissions: { [key: string]: string[] } = {
   billing: ['billing.view'],
   icd: ['icd.view'],
   reports: ['reports.view'],
+  analytics: ['reports.view'],
+  'audit-logs': ['audit.view'],
   admin: ['users.view'],
   'clinic-users': ['users.view'],
 };
@@ -27,7 +29,7 @@ const featurePermissions: { [key: string]: string[] } = {
 
 const roleModuleAccess: Record<string, string[]> = {
   admin: ['dashboard', 'patients', 'appointments', 'doctors', 'emr', 'pharmacy', 'billing', 'icd', 'reports', 'admin', 'clinic-users', 'settings'],
-  doctor: ['dashboard', 'patients', 'appointments', 'doctors', 'emr', 'icd', 'settings'],
+  doctor: ['dashboard', 'patients', 'appointments', 'doctors', 'emr', 'icd', 'analytics', 'settings'],
   nurse: ['dashboard', 'patients', 'appointments', 'emr', 'icd', 'reports', 'settings'],
   receptionist: ['dashboard', 'patients', 'appointments', 'doctors', 'pharmacy', 'billing', 'icd', 'reports', 'settings'],
   staff: ['dashboard', 'patients', 'appointments', 'emr', 'icd', 'reports', 'settings'],
@@ -67,7 +69,11 @@ export function Sidebar({ isOpen, activeModule, onModuleChange }: SidebarProps) 
     { id: 'billing', label: 'Billing', icon: CreditCard },
     { id: 'icd', label: 'ICD Management', icon: FileText },
     { id: 'reports', label: 'Reports', icon: BarChart3 },
-    ...(isAdmin ? [{ id: 'clinic-users', label: 'User Management', icon: Users }] : []),
+    { id: 'analytics', label: 'Doctor Analytics', icon: TrendingUp },
+    ...(isAdmin ? [
+      { id: 'clinic-users', label: 'User Management', icon: Users },
+      { id: 'audit-logs', label: 'Audit Trail', icon: Activity },
+    ] : []),
   ];
 
   // Only show menu items that user has access to (feature-based)
@@ -80,6 +86,12 @@ export function Sidebar({ isOpen, activeModule, onModuleChange }: SidebarProps) 
     // Dashboard is always visible and enabled for authenticated users
     if (item.id === 'dashboard') {
       return { ...item, visible: true, enabled: true };
+    }
+
+    // Doctor performance analytics is restricted to admins and doctors only.
+    if (item.id === 'analytics') {
+      const allowed = normalizedRole === 'doctor';
+      return { ...item, visible: allowed, enabled: allowed };
     }
 
     const requiredPerms = featurePermissions[item.id] || [];
@@ -105,7 +117,7 @@ export function Sidebar({ isOpen, activeModule, onModuleChange }: SidebarProps) 
     >
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+          <div className="w-10 h-10 bg-linear-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
             <Stethoscope className="w-6 h-6 text-white" />
           </div>
           <div>
@@ -137,7 +149,7 @@ export function Sidebar({ isOpen, activeModule, onModuleChange }: SidebarProps) 
               }`}
             >
               <span className="flex items-center gap-3 min-w-0">
-                <item.icon className="w-5 h-5 flex-shrink-0" />
+                <item.icon className="w-5 h-5 shrink-0" />
                 <span className="truncate">{item.label}</span>
               </span>
             </button>

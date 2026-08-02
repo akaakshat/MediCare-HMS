@@ -152,6 +152,10 @@ export class ApiClient {
     return this.request<T>(endpoint, { method: 'DELETE', requireAuth });
   }
 
+  static async getSyncStatus() {
+    return this.request<{ success: boolean; status: { pending: number; processing: number; failed: number; synced: number; lastSuccessfulSync: string | null } }>('/sync/status', { method: 'GET' });
+  }
+
   static async login(email: string, password: string) {
     const normalizedEmail = email?.trim().toLowerCase();
     const result = await this.request<any>('/auth/login', {
@@ -219,6 +223,10 @@ export class ApiClient {
 
   static async getPatientByUHID(uhid: string) {
     return this.request<{ success: boolean; patient: any }>(`/patients/uhid/${uhid}`);
+  }
+
+  static async evaluateClinicalAlerts(data: any) {
+    return this.request<{ success: boolean; alerts: any[] }>('/alerts/evaluate', { method: 'POST', data });
   }
 
   static async checkPhone(phone: string) {
@@ -335,6 +343,18 @@ export class ApiClient {
     return this.request(`/pharmacy/${id}`, { method: 'PUT', data });
   }
 
+  static async getInventorySummary() {
+    return this.request<{ success: boolean; summary: any; expiryAlerts: any[]; topMovers: any[]; salesTrend: any[] }>('/inventory/summary');
+  }
+
+  static async recordPharmacySale(data: any) {
+    return this.request('/inventory/sales', { method: 'POST', data });
+  }
+
+  static async getPharmacySales(params?: Record<string, any>) {
+    return this.request<{ success: boolean; sales: any[] }>('/inventory/sales', { params });
+  }
+
   // Billing
   static async getBills() {
     return this.request<{ success: boolean; bills: any[] }>('/billing');
@@ -351,6 +371,42 @@ export class ApiClient {
   // Notifications (optional - backend may not implement this yet)
   static async getNotifications() {
     return this.request<{ success?: boolean; notifications?: any[] }>('/notifications');
+  }
+
+  // Audit Logs
+  static async getAuditLogs(params?: Record<string, any>) {
+    return this.request<{ success: boolean; data: any[]; pagination: any }>('/audit-logs', { params });
+  }
+
+  static async getAuditLogStats() {
+    return this.request<{ success: boolean; data: any }>('/audit-logs/stats');
+  }
+
+  static async exportAuditLogs() {
+    const token = this.getToken();
+    if (!token) throw new Error('Not authenticated');
+
+    const response = await fetch(`${BASE_URL}/audit-logs/export/csv`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const result = await response.text();
+      throw new Error(result || 'Failed to export audit logs');
+    }
+
+    const blob = await response.blob();
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = downloadUrl;
+    a.download = `audit-logs-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(downloadUrl);
   }
 
   // Settings

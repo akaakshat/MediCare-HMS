@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const AuditLog = require('../models/AuditLog');
 const MasterData = require('../models/MasterData');
 const perms = require('../config/permissions');
 const { getEffectivePermissions, getEffectivePermissionsForUser, getEffectiveFeatures, getEffectiveFeaturesForUser, normalizeStringArray } = require('../services/rbacService');
@@ -152,6 +153,20 @@ exports.login = async (req, res) => {
     const token = generateToken(user, permissions);
     const normalizedRole = (user.role || '').toString().toLowerCase();
     const roleFeatures = (getEffectiveFeatures(user) || []).map((item) => String(item).trim().toLowerCase());
+
+    await AuditLog.log(
+      'LOGIN',
+      user._id,
+      { id: user._id, email: user.email, name: user.name, role: normalizedRole },
+      'USER',
+      user._id,
+      null,
+      `User login successful: ${user.email}`,
+      req.ip,
+      req.headers['user-agent'],
+      null,
+      true
+    );
 
     res.json({
       success: true,

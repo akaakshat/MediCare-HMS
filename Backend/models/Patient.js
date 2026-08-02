@@ -17,6 +17,12 @@ const PatientSchema = new mongoose.Schema({
   status: { type: String, enum: ['Active', 'Inactive'], default: 'Active' },
   statusId: { type: mongoose.Schema.Types.ObjectId, ref: 'MasterData' },
   uhid: { type: String, unique: true },
+  knownAllergies: { type: [String], default: [] },
+  chronicDiseases: { type: [String], default: [] },
+  currentMedications: { type: [String], default: [] },
+  medicalHistory: { type: String, default: '' },
+  pregnancyStatus: { type: String, enum: ['Pregnant', 'Not Pregnant', 'Unknown'], default: 'Unknown' },
+  nextFollowUp: { type: Date },
   lastVisit: { type: Date },
   lastActivityDate: { type: Date, default: Date.now },
   isInactive: { type: Boolean, default: false },
@@ -25,6 +31,7 @@ const PatientSchema = new mongoose.Schema({
 
 PatientSchema.index({ isInactive: 1 });
 PatientSchema.index({ lastActivityDate: 1 });
+PatientSchema.index({ nextFollowUp: 1 });
 PatientSchema.index({ isInactive: 1, lastActivityDate: 1 });
 
 // Generate unique UHID before saving
