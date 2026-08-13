@@ -153,21 +153,21 @@ export const ClinicUserForm: React.FC<{
   useEffect(() => {
     const checkBackend = async () => {
       try {
-        // Try to reach the backend
-        const response = await fetch('http://localhost:5000/api/health', {
+        const apiBaseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+        const response = await fetch(`${apiBaseUrl}/api/health`, {
           method: 'GET',
         }).catch(() => null);
-        
+
         if (!response || !response.ok) {
-          setBackendError('Backend server is not responding. Make sure the backend is running on port 5000.');
+          setBackendError('Backend server is not responding. Verify that the deployed backend URL is configured in VITE_API_URL.');
         } else {
           setBackendError(null);
         }
       } catch (error) {
-        setBackendError('Cannot connect to backend. Ensure server is running on port 5000.');
+        setBackendError('Cannot connect to backend. Verify the deployed backend URL in VITE_API_URL.');
       }
     };
-    
+
     checkBackend();
   }, []);
 

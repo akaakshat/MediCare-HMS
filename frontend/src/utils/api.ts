@@ -1,11 +1,12 @@
 import { normalizeUserAccess } from './permissions';
 
-// Support both VITE_API_BASE_URL and VITE_API_URL for backwards compatibility
-export const API_BASE_URL =
+const envBaseUrl =
   (import.meta as any).env.VITE_API_BASE_URL ||
   (import.meta as any).env.VITE_API_URL ||
-  'http://localhost:5000/api';
-const BASE_URL = API_BASE_URL;
+  '';
+
+export const API_BASE_URL = (envBaseUrl || '').replace(/\/+$/, '');
+const BASE_URL = API_BASE_URL ? `${API_BASE_URL}/api` : '';
 
 interface ApiOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE';

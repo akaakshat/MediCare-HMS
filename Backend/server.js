@@ -31,12 +31,30 @@ const { importMedicineFormulas } = require('./scripts/import-medicine-formulas')
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'http://localhost:4173'
+].filter(Boolean);
 
 // Security hardening
 app.use(helmet());
 
 // Ensure CORS headers are always sent (including error responses like 429)
-app.use(cors());
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
+  })
+);
 
 // Rate limiting for API requests (can be customized via env vars)
 // Note: In development (NODE_ENV !== 'production') we disable rate limiting to avoid

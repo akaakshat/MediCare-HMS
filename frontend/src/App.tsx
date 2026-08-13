@@ -25,7 +25,7 @@ import { ApiClient } from './utils/api';
 import { hasFeatureAccess } from './utils/permissions';
 import { Toaster } from 'sonner';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
 
 const normalizeStringArray = (items?: any): string[] => {
   if (typeof items === 'string') {
@@ -180,7 +180,7 @@ export default function App() {
   const checkSystemHealth = async () => {
     try {
       // Check API reachability + basic health
-      const healthResponse = await fetch(`${API_BASE_URL}/health`);
+      const healthResponse = await fetch(`${API_URL}/api/health`);
       if (!healthResponse.ok) {
         throw new Error(`Health check returned ${healthResponse.status}`);
       }
@@ -215,7 +215,7 @@ export default function App() {
       }
     } catch (error) {
       console.error('System health check failed:', {
-        apiBaseUrl: API_BASE_URL,
+        apiBaseUrl: API_URL,
         location: window.location.href,
         error,
       });
