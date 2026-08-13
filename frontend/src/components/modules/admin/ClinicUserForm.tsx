@@ -154,7 +154,7 @@ export const ClinicUserForm: React.FC<{
     const checkBackend = async () => {
       try {
         const apiBaseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
-        const response = await fetch(`${apiBaseUrl}/api/health`, {
+        const response = await fetch(`${apiBaseUrl}/health`, {
           method: 'GET',
         }).catch(() => null);
 

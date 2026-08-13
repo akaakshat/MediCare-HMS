@@ -31,8 +31,9 @@ const { importMedicineFormulas } = require('./scripts/import-medicine-formulas')
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const normalizeOrigin = (value) => (typeof value === 'string' ? value.replace(/\/+$/, '') : value);
 const allowedOrigins = [
-  process.env.FRONTEND_URL,
+  normalizeOrigin(process.env.FRONTEND_URL),
   'http://localhost:5173',
   'http://localhost:3000',
   'http://localhost:4173'
@@ -45,7 +46,8 @@ app.use(helmet());
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
+      const normalizedOrigin = normalizeOrigin(origin);
+      if (!origin || allowedOrigins.includes(normalizedOrigin)) {
         callback(null, true);
         return;
       }
@@ -117,7 +119,13 @@ app.use('/api/masters', mdmRoutes); // Backward-compatible alias for existing UI
 app.use('/api/support-articles', supportArticleRoutes); // IT support knowledge base
 app.use('/api/support-assistant', supportAssistantRoutes); // AI-assisted system support
 
-// Health check
+// Health checks
+app.get('/health', (req, res) => res.status(200).json({
+  success: true,
+  message: 'Backend is healthy',
+  timestamp: new Date().toISOString(),
+}));
+
 app.get('/api/health', (req, res) => res.json({ ok: true, time: new Date() }));
 
 // Expose generated export/template files
@@ -135,7 +143,7 @@ app.use((err, req, res, next) => {
 });
 
 connectDB().then(async () => {
-  app.listen(PORT, async () => {
+  app.listen(PORT, '0.0.0.0', async () => {
     console.log(`Server running on port ${PORT}`);
     try {
       await markInactivePatients();

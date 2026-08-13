@@ -180,7 +180,7 @@ export default function App() {
   const checkSystemHealth = async () => {
     try {
       // Check API reachability + basic health
-      const healthResponse = await fetch(`${API_URL}/api/health`);
+      const healthResponse = await fetch(`${API_URL}/health`);
       if (!healthResponse.ok) {
         throw new Error(`Health check returned ${healthResponse.status}`);
       }
