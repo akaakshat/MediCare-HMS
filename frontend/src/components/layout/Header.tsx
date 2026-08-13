@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Menu, Bell, Search, User, LogOut, Sun, Moon } from 'lucide-react';
+import { Menu, Bell, Search, User, LogOut, Sun, Moon, ShieldCheck } from 'lucide-react';
 import { ApiClient } from '../../utils/api';
 import { toast } from 'sonner';
 
@@ -7,7 +7,6 @@ interface HeaderProps {
   onMenuClick: () => void;
   activeModule: string;
   onModuleChange?: (moduleId: string) => void;
-  networkStatus?: 'online' | 'offline' | 'syncing';
   theme?: 'light' | 'dark';
   onThemeToggle?: () => void;
 }
@@ -19,7 +18,7 @@ interface GlobalSearchResult {
   id: string;
 }
 
-export function Header({ onMenuClick, activeModule, onModuleChange, networkStatus = 'online', theme = 'light', onThemeToggle }: HeaderProps) {
+export function Header({ onMenuClick, activeModule, onModuleChange, theme = 'light', onThemeToggle }: HeaderProps) {
   const currentUser = ApiClient.getCurrentUser();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<GlobalSearchResult[]>([]);
@@ -174,25 +173,31 @@ export function Header({ onMenuClick, activeModule, onModuleChange, networkStatu
   }, []);
 
   return (
-    <header className="bg-white border-b border-gray-200 px-6 py-4">
-      <div className="flex items-center justify-between">
+    <header className="border-b border-slate-200/70 bg-white/70 px-6 py-4 backdrop-blur-xl">
+      <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <button
             onClick={onMenuClick}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="rounded-2xl border border-slate-200 bg-white/80 p-2.5 text-slate-700 shadow-sm transition-all hover:-translate-y-0.5 hover:bg-slate-50"
             aria-label="Toggle sidebar"
             title="Toggle sidebar"
           >
-            <Menu className="w-5 h-5 text-gray-600" />
+            <Menu className="w-5 h-5" />
           </button>
-          <h2 className="text-gray-900">{getModuleTitle()}</h2>
+          <div>
+            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+              <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
+              Premium care workspace
+            </div>
+            <h2 className="text-lg font-semibold text-slate-900">{getModuleTitle()}</h2>
+          </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={onThemeToggle}
-            className="hidden md:flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+            className="hidden md:flex items-center gap-2 rounded-2xl border border-slate-200 bg-white/80 px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50"
             aria-label="Toggle theme"
             title="Toggle theme"
           >
@@ -201,8 +206,8 @@ export function Header({ onMenuClick, activeModule, onModuleChange, networkStatu
           </button>
 
           <div className="relative" ref={searchRef}>
-            <div className="hidden md:flex items-center gap-2 bg-gray-100 rounded-lg px-4 py-2 w-md dark:bg-slate-800">
-              <Search className="w-4 h-4 text-gray-500" />
+            <div className="hidden md:flex items-center gap-2 rounded-2xl border border-slate-200 bg-white/80 px-4 py-2.5 shadow-sm backdrop-blur w-[360px]">
+              <Search className="w-4 h-4 text-slate-400" />
               <input
                 type="text"
                 placeholder="Search patients, appointments, doctors, invoices..."
@@ -211,20 +216,20 @@ export function Header({ onMenuClick, activeModule, onModuleChange, networkStatu
                 onFocus={() => {
                   if (searchQuery.trim()) setShowSearchResults(true);
                 }}
-                className="bg-transparent border-none outline-none text-sm w-full"
+                className="w-full border-none bg-transparent text-sm text-slate-700 outline-none"
               />
             </div>
 
             {showSearchResults && (
-              <div className="absolute left-0 top-full mt-2 w-md max-w-[90vw] bg-white border border-gray-200 rounded-lg shadow-xl z-50 max-h-96 overflow-auto dark:border-slate-700 dark:bg-slate-900">
-                <div className="px-4 py-3 border-b text-xs font-semibold uppercase tracking-wide text-gray-500 dark:border-slate-700 dark:text-slate-400">
+              <div className="absolute left-0 top-full mt-2 w-[360px] max-w-[90vw] rounded-2xl border border-slate-200 bg-white/90 shadow-2xl shadow-slate-200/70 z-50 max-h-96 overflow-auto backdrop-blur-xl">
+                <div className="px-4 py-3 border-b text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Global Search
                 </div>
 
                 {isSearching ? (
-                  <div className="p-4 text-sm text-gray-500">Searching across records...</div>
+                  <div className="p-4 text-sm text-slate-500">Searching across records...</div>
                 ) : searchResults.length === 0 ? (
-                  <div className="p-4 text-sm text-gray-500">
+                  <div className="p-4 text-sm text-slate-500">
                     {searchQuery.trim() ? `No matches found for “${searchQuery.trim()}”` : 'Type to search patients, appointments, doctors, or invoices.'}
                   </div>
                 ) : (
@@ -233,10 +238,10 @@ export function Header({ onMenuClick, activeModule, onModuleChange, networkStatu
                       <button
                         key={`${result.module}-${result.id}`}
                         onMouseDown={() => handleResultSelect(result.module)}
-                        className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 dark:hover:bg-slate-800 dark:border-slate-700"
+                        className="w-full text-left px-4 py-3 hover:bg-slate-50 border-b border-slate-100 last:border-b-0"
                       >
-                        <div className="text-sm font-medium text-gray-900 dark:text-slate-100">{result.title}</div>
-                        <div className="text-xs text-gray-500 dark:text-slate-400">{result.subtitle}</div>
+                        <div className="text-sm font-medium text-slate-900">{result.title}</div>
+                        <div className="text-xs text-slate-500">{result.subtitle}</div>
                       </button>
                     ))}
                   </div>
@@ -261,26 +266,26 @@ export function Header({ onMenuClick, activeModule, onModuleChange, networkStatu
                   ]);
                 }
               }}
-              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              className="relative rounded-2xl border border-slate-200 bg-white/80 p-2.5 shadow-sm transition-all hover:-translate-y-0.5 hover:bg-slate-50"
+              aria-haspopup="true"
               title="Notifications"
-              aria-label="Notifications"
             >
-              <Bell className="w-5 h-5 text-gray-600" />
+              <Bell className="w-5 h-5 text-slate-600" />
+              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
             </button>
-            <span className={`absolute -right-1 -top-1 inline-flex h-2.5 w-2.5 rounded-full ${networkStatus === 'online' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
 
             {notifOpen && (
-              <div className="absolute right-0 mt-2 w-72 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                <div className="p-3 border-b font-semibold">Notifications</div>
+              <div className="absolute right-0 mt-2 w-72 rounded-2xl border border-slate-200 bg-white/90 shadow-2xl shadow-slate-200/70 z-50 backdrop-blur-xl">
+                <div className="border-b border-slate-100 p-3 text-sm font-semibold text-slate-700">Notifications</div>
                 <div className="max-h-60 overflow-auto">
                   {notifications.length === 0 ? (
-                    <div className="p-3 text-sm text-gray-500">No notifications</div>
+                    <div className="p-3 text-sm text-slate-500">No notifications</div>
                   ) : (
                     notifications.map((n) => (
-                      <div key={n.id} className="p-3 hover:bg-gray-50 border-b last:border-b-0">
-                        <div className="text-sm font-medium">{n.title}</div>
-                        <div className="text-xs text-gray-500">{n.message}</div>
-                        <div className="text-xs text-gray-400 mt-1">{n.time}</div>
+                      <div key={n.id} className="border-b border-slate-100 p-3 last:border-b-0 hover:bg-slate-50">
+                        <div className="text-sm font-medium text-slate-800">{n.title}</div>
+                        <div className="text-xs text-slate-500">{n.message}</div>
+                        <div className="mt-1 text-[11px] text-slate-400">{n.time}</div>
                       </div>
                     ))
                   )}
@@ -289,10 +294,10 @@ export function Header({ onMenuClick, activeModule, onModuleChange, networkStatu
             )}
           </div>
 
-          <div className="flex items-center gap-3 pl-4 border-l border-gray-200">
-            <div className="text-right hidden md:block">
-              <p className="text-sm text-gray-900">{currentUser?.name || 'User'}</p>
-              <p className="text-xs text-gray-500 capitalize">{currentUser?.role || 'Staff'}</p>
+          <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white/80 px-3 py-2 shadow-sm pl-4">
+            <div className="hidden text-right md:block">
+              <p className="text-sm font-medium text-slate-900">{currentUser?.name || 'User'}</p>
+              <p className="text-xs capitalize text-slate-500">{currentUser?.role || 'Staff'}</p>
             </div>
             <div
               ref={profileRef}
@@ -300,37 +305,36 @@ export function Header({ onMenuClick, activeModule, onModuleChange, networkStatu
               onMouseLeave={() => setProfileOpen(false)}
               className="relative flex items-center gap-3"
             >
-              <div className="w-10 h-10 bg-linear-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center">
-                <User className="w-5 h-5 text-white" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-blue-600">
+                <User className="h-5 w-5 text-white" />
               </div>
 
               {profileOpen && (
-                <div className="absolute right-0 top-full mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                <div className="absolute right-0 top-full mt-2 w-56 rounded-2xl border border-slate-200 bg-white/90 shadow-2xl shadow-slate-200/70 z-50 backdrop-blur-xl">
                   <div className="p-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-linear-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center">
-                        <User className="w-6 h-6 text-white" />
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-blue-600">
+                        <User className="h-6 w-6 text-white" />
                       </div>
                       <div>
-                        <div className="font-medium text-gray-900">{currentUser?.name || 'User'}</div>
-                        <div className="text-xs text-gray-500">{currentUser?.email || ''}</div>
-                        <div className="text-xs text-gray-400 capitalize">{currentUser?.role || 'staff'}</div>
+                        <div className="font-medium text-slate-900">{currentUser?.name || 'User'}</div>
+                        <div className="text-xs text-slate-500">{currentUser?.email || ''}</div>
+                        <div className="text-xs capitalize text-slate-400">{currentUser?.role || 'staff'}</div>
                       </div>
                     </div>
 
                     <div className="mt-3">
                       <button
                         onClick={() => {
-                          // navigate to profile route if available
                           window.location.href = '/profile';
                         }}
-                        className="w-full text-left px-3 py-2 rounded hover:bg-gray-50 text-sm"
+                        className="w-full text-left rounded-xl px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
                       >
                         View Profile
                       </button>
                       <button
                         onClick={handleLogout}
-                        className="w-full text-left px-3 py-2 rounded hover:bg-red-50 text-sm text-red-600"
+                        className="w-full text-left rounded-xl px-3 py-2 text-sm text-red-600 hover:bg-red-50"
                       >
                         Logout
                       </button>
@@ -341,10 +345,10 @@ export function Header({ onMenuClick, activeModule, onModuleChange, networkStatu
             </div>
             <button
               onClick={handleLogout}
-              className="p-2 hover:bg-red-50 rounded-lg transition-colors group"
+              className="rounded-xl p-2 text-slate-500 transition-colors hover:bg-red-50 hover:text-red-600"
               title="Logout"
             >
-              <LogOut className="w-5 h-5 text-gray-600 group-hover:text-red-600" />
+              <LogOut className="h-5 w-5" />
             </button>
           </div>
         </div>

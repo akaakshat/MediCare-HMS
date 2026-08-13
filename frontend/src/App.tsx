@@ -15,7 +15,7 @@ import { DoctorPerformanceAnalytics } from './components/modules/analytics/Docto
 import { IcdManagement } from './components/modules/icd/IcdManagement';
 import { ClinicUserManagement } from './components/modules/admin/ClinicUserManagement';
 import { SupportArticleManagement } from './components/modules/admin/SupportArticleManagement';
-import { AuditLogs } from './components/modules/admin/AuditLogs.tsx';
+import { AuditLogs } from './components/modules/admin/AuditLogs';
 import { NoAccessPage } from './components/modules/NoAccessPage';
 import { Login } from './components/auth/Login';
 import Settings from './components/modules/settings/Settings';
@@ -24,9 +24,6 @@ import { PageSkeleton } from './components/ui/LoadingSkeleton';
 import { ApiClient } from './utils/api';
 import { hasFeatureAccess } from './utils/permissions';
 import { Toaster } from 'sonner';
-import { useNetworkMonitor } from './services/networkMonitor';
-import { initBackgroundSync } from './services/backgroundSyncService';
-import { fetchSyncStatus, SyncStatus } from './services/syncStatusService';
 
 const API_BASE_URL = 'http://localhost:5000/api';
 
@@ -127,8 +124,6 @@ export default function App() {
     highRiskPatients: 0,
   });
   const [doctorAvailability, setDoctorAvailability] = useState<string[]>([]);
-  const networkStatus = useNetworkMonitor();
-  const [syncStatus, setSyncStatus] = useState<SyncStatus>({ pending: 0, processing: 0, failed: 0, synced: 0, lastSuccessfulSync: null });
 
   const formatScheduleItem = (slot: string) => {
     const rangeMatch = slot.match(/^(\d{2}\/\d{2}\/\d{4}) to (\d{2}\/\d{2}\/\d{4}) (\d{1,2}:\d{2} (?:AM|PM)) - (\d{1,2}:\d{2} (?:AM|PM))$/i);
@@ -181,26 +176,6 @@ export default function App() {
     window.addEventListener('auth:invalid', onAuthInvalid as EventListener);
     return () => window.removeEventListener('auth:invalid', onAuthInvalid as EventListener);
   }, []);
-
-  useEffect(() => {
-    const syncWithBackground = async () => {
-      if (!isAuthenticated) return;
-      await initBackgroundSync();
-    };
-    syncWithBackground();
-  }, [isAuthenticated]);
-
-  useEffect(() => {
-    const refreshSyncStatus = async () => {
-      if (!isAuthenticated) return;
-      const status = await fetchSyncStatus();
-      if (status) setSyncStatus(status);
-    };
-
-    refreshSyncStatus();
-    const interval = setInterval(refreshSyncStatus, 30000);
-    return () => clearInterval(interval);
-  }, [isAuthenticated, networkStatus]);
 
   const checkSystemHealth = async () => {
     try {
@@ -648,33 +623,9 @@ export default function App() {
           onModuleChange={setActiveModule}
           theme={theme}
           onThemeToggle={toggleTheme}
-          networkStatus={networkStatus}
         />
         
         <main className="flex-1 overflow-y-auto p-6 bg-gray-50 text-gray-900 dark:bg-slate-950 dark:text-slate-100">
-          <div className="mb-6 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-700 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
-            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-              <div className="flex items-center gap-3">
-                <span className={`inline-flex h-2.5 w-2.5 rounded-full ${networkStatus === 'online' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-                <span className="font-semibold">Network:</span>
-                <span>{networkStatus === 'online' ? 'Online' : 'Offline'}</span>
-              </div>
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                <div className="rounded-lg bg-slate-50 p-2 text-xs font-medium uppercase tracking-wide text-slate-500 dark:bg-slate-800 dark:text-slate-300">
-                  Pending: {syncStatus.pending}
-                </div>
-                <div className="rounded-lg bg-slate-50 p-2 text-xs font-medium uppercase tracking-wide text-slate-500 dark:bg-slate-800 dark:text-slate-300">
-                  Processing: {syncStatus.processing}
-                </div>
-                <div className="rounded-lg bg-slate-50 p-2 text-xs font-medium uppercase tracking-wide text-slate-500 dark:bg-slate-800 dark:text-slate-300">
-                  Failed: {syncStatus.failed}
-                </div>
-                <div className="rounded-lg bg-slate-50 p-2 text-xs font-medium uppercase tracking-wide text-slate-500 dark:bg-slate-800 dark:text-slate-300">
-                  Last sync: {syncStatus.lastSuccessfulSync ? new Date(syncStatus.lastSuccessfulSync).toLocaleString() : 'Never'}
-                </div>
-              </div>
-            </div>
-          </div>
           {renderContent()}
         </main>
       </div>

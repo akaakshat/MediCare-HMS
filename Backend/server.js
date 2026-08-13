@@ -25,7 +25,6 @@ const rbacRoutes = require('./routes/rbac');
 const mdmRoutes = require('./routes/mdm');
 const supportArticleRoutes = require('./routes/supportArticles');
 const supportAssistantRoutes = require('./routes/supportAssistant');
-const syncRoutes = require('./routes/sync');
 const { scheduleInactivePatientJob, markInactivePatients } = require('./jobs/inactivePatientJob');
 const { importIcdCodes } = require('./scripts/import-icd10');
 const { importMedicineFormulas } = require('./scripts/import-medicine-formulas');
@@ -99,7 +98,6 @@ app.use('/api/mdm', mdmRoutes); // Feature access and MDM endpoints
 app.use('/api/masters', mdmRoutes); // Backward-compatible alias for existing UI/docs
 app.use('/api/support-articles', supportArticleRoutes); // IT support knowledge base
 app.use('/api/support-assistant', supportAssistantRoutes); // AI-assisted system support
-app.use('/api/sync', syncRoutes); // Offline sync persistence and processing
 
 // Health check
 app.get('/api/health', (req, res) => res.json({ ok: true, time: new Date() }));

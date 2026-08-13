@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { Home, Users, Calendar, Stethoscope, FileText, Pill, CreditCard, BarChart3, TrendingUp, Settings, LogOut, Shield, Activity } from 'lucide-react';
+import { Home, Users, Calendar, Stethoscope, FileText, Pill, CreditCard, BarChart3, TrendingUp, Settings, LogOut, Shield, Activity, Sparkles } from 'lucide-react';
 import { AuthContext } from '../../context/AuthContext';
 import { hasFeatureAccess } from '../../utils/permissions';
 
@@ -9,9 +9,8 @@ interface SidebarProps {
   onModuleChange: (module: string) => void;
 }
 
-// Map features to their required permissions
 const featurePermissions: { [key: string]: string[] } = {
-  dashboard: [], // Always available
+  dashboard: [],
   patients: ['patients.view'],
   appointments: ['appointments.view'],
   doctors: ['doctors.view'],
@@ -25,7 +24,6 @@ const featurePermissions: { [key: string]: string[] } = {
   admin: ['users.view'],
   'clinic-users': ['users.view'],
 };
-
 
 const roleModuleAccess: Record<string, string[]> = {
   admin: ['dashboard', 'patients', 'appointments', 'doctors', 'emr', 'pharmacy', 'billing', 'icd', 'reports', 'admin', 'clinic-users', 'settings'],
@@ -46,11 +44,10 @@ export function Sidebar({ isOpen, activeModule, onModuleChange }: SidebarProps) 
   const normalizedRole = String(user?.role || '').trim().toLowerCase();
   const isAdmin = normalizedRole === 'admin';
   const userFeatures = user?.features || [];
-  const normalizedFeatures = Array.isArray(userFeatures) 
-    ? userFeatures.map(f => String(f).trim().toLowerCase())
+  const normalizedFeatures = Array.isArray(userFeatures)
+    ? userFeatures.map((f) => String(f).trim().toLowerCase())
     : [];
 
-  // Base menu items
   const allMenuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home },
     { id: 'patients', label: 'Patients', icon: Users },
@@ -76,19 +73,15 @@ export function Sidebar({ isOpen, activeModule, onModuleChange }: SidebarProps) 
     ] : []),
   ];
 
-  // Only show menu items that user has access to (feature-based)
   const menuAccess = allMenuItems.map((item) => {
-    // Admin has access to everything
     if (isAdmin) {
       return { ...item, visible: true, enabled: true };
     }
 
-    // Dashboard is always visible and enabled for authenticated users
     if (item.id === 'dashboard') {
       return { ...item, visible: true, enabled: true };
     }
 
-    // Doctor performance analytics is restricted to admins and doctors only.
     if (item.id === 'analytics') {
       const allowed = normalizedRole === 'doctor';
       return { ...item, visible: allowed, enabled: allowed };
@@ -112,26 +105,27 @@ export function Sidebar({ isOpen, activeModule, onModuleChange }: SidebarProps) 
   return (
     <aside
       className={`${
-        isOpen ? 'w-64' : 'w-0'
-      } bg-white border-r border-gray-200 transition-all duration-300 overflow-hidden flex flex-col`}
+        isOpen ? 'w-72' : 'w-0'
+      } bg-white/80 backdrop-blur-xl border-r border-slate-200/70 shadow-[12px_0_30px_rgba(15,23,42,0.04)] transition-all duration-300 overflow-hidden flex flex-col`}
     >
-      <div className="p-6 border-b border-gray-200">
+      <div className="p-6 border-b border-slate-200/70">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-linear-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-600 via-sky-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
             <Stethoscope className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-gray-900">MediCare HMS</h1>
-            <p className="text-xs text-gray-500">Hospital Management</p>
+            <h1 className="text-[15px] font-semibold text-slate-900">MediCare HMS</h1>
+            <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">AI Clinic Operations</p>
           </div>
         </div>
+
       </div>
 
       {!hasAnyAccess ? (
         <div className="flex-1 flex flex-col items-center justify-center p-4 text-center">
-          <Shield className="w-12 h-12 text-gray-300 mb-4" />
-          <p className="text-gray-500 text-sm">No access permissions</p>
-          <p className="text-gray-400 text-xs mt-2">Contact your administrator to grant access</p>
+          <Shield className="w-12 h-12 text-slate-300 mb-4" />
+          <p className="text-slate-600 text-sm">No access permissions</p>
+          <p className="text-slate-400 text-xs mt-2">Contact your administrator to grant access</p>
         </div>
       ) : (
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
@@ -140,12 +134,12 @@ export function Sidebar({ isOpen, activeModule, onModuleChange }: SidebarProps) 
               key={item.id}
               onClick={() => item.enabled && onModuleChange(item.id)}
               disabled={!item.enabled}
-              className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-lg transition-colors ${
+              className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-2xl transition-all duration-200 ${
                 activeModule === item.id
-                  ? 'bg-blue-50 text-blue-600'
+                  ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-lg shadow-blue-500/20'
                   : item.enabled
-                    ? 'text-gray-600 hover:bg-gray-50'
-                    : 'text-gray-400 bg-gray-50 cursor-not-allowed'
+                    ? 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900'
+                    : 'text-slate-400 bg-slate-50/80 cursor-not-allowed'
               }`}
             >
               <span className="flex items-center gap-3 min-w-0">
@@ -157,15 +151,15 @@ export function Sidebar({ isOpen, activeModule, onModuleChange }: SidebarProps) 
         </nav>
       )}
 
-      <div className="p-4 border-t border-gray-200 space-y-1">
+      <div className="p-4 border-t border-slate-200/70 space-y-2">
         <button
           onClick={() => onModuleChange('settings')}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors"
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-slate-600 hover:bg-slate-100/80 transition-colors"
         >
           <Settings className="w-5 h-5" />
           <span>Settings</span>
         </button>
-        <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors">
+        <button className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-red-600 hover:bg-red-50 transition-colors">
           <LogOut className="w-5 h-5" />
           <span>Logout</span>
         </button>

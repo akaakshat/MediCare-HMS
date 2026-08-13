@@ -152,10 +152,6 @@ export class ApiClient {
     return this.request<T>(endpoint, { method: 'DELETE', requireAuth });
   }
 
-  static async getSyncStatus() {
-    return this.request<{ success: boolean; status: { pending: number; processing: number; failed: number; synced: number; lastSuccessfulSync: string | null } }>('/sync/status', { method: 'GET' });
-  }
-
   static async login(email: string, password: string) {
     const normalizedEmail = email?.trim().toLowerCase();
     const result = await this.request<any>('/auth/login', {
