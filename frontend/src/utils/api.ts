@@ -17,6 +17,7 @@ interface ApiOptions {
 
 export class ApiClient {
   // Frontend talks to backend at BASE_URL; auth token stored in sessionStorage for per-tab login
+  private static sessionRequestPromise: Promise<any> | null = null;
 
   private static normalizeStringArray(input?: any[]): string[] {
     if (!Array.isArray(input)) return [];
@@ -96,6 +97,7 @@ export class ApiClient {
         let friendly = result.message || result.error || 'Request failed';
         if (response.status === 401 && !result.message) friendly = 'Not authenticated. Please log in.';
         else if (response.status === 403) friendly = "You don't have permission to perform this action.";
+        else if (response.status === 429) friendly = 'Too many requests. Please wait a moment and try again.';
         else if (response.status >= 500) friendly = 'Server error. Please try again later.';
 
         const err: any = new Error(friendly);
@@ -171,15 +173,26 @@ export class ApiClient {
   }
 
   static async getSession() {
-    const result = await this.request('/auth/session');
-    if (result?.user) {
-      const normalized = normalizeUserAccess(result.user);
-      sessionStorage.setItem('hospital_user', JSON.stringify(normalized));
-      if (result.token) {
-        sessionStorage.setItem('hospital_access_token', result.token);
-      }
+    if (this.sessionRequestPromise) {
+      return this.sessionRequestPromise;
     }
-    return result;
+
+    this.sessionRequestPromise = this.request('/auth/session')
+      .then((result) => {
+        if (result?.user) {
+          const normalized = normalizeUserAccess(result.user);
+          sessionStorage.setItem('hospital_user', JSON.stringify(normalized));
+          if (result.token) {
+            sessionStorage.setItem('hospital_access_token', result.token);
+          }
+        }
+        return result;
+      })
+      .finally(() => {
+        this.sessionRequestPromise = null;
+      });
+
+    return this.sessionRequestPromise;
   }
 
   static logout() {

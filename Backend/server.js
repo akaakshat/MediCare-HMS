@@ -3,7 +3,7 @@ require('dotenv').config({ path: path.join(__dirname, '.env') });
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
+const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 const { connectDB } = require('./config/db');
 
 const authRoutes = require('./routes/auth');
@@ -30,6 +30,7 @@ const { importIcdCodes } = require('./scripts/import-icd10');
 const { importMedicineFormulas } = require('./scripts/import-medicine-formulas');
 
 const app = express();
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 5000;
 const normalizeOrigin = (value) => (typeof value === 'string' ? value.replace(/\/+$/, '') : value);
 const allowedOrigins = [
@@ -61,19 +62,19 @@ app.use(
 // Rate limiting for API requests (can be customized via env vars)
 // Note: In development (NODE_ENV !== 'production') we disable rate limiting to avoid
 // hitting 429 when tooling (Vite/HMR) or dashboard polling generates lots of requests.
-const RATE_LIMIT_MAX = parseInt(process.env.RATE_LIMIT_MAX || '200', 10);
+const RATE_LIMIT_MAX = parseInt(process.env.RATE_LIMIT_MAX || '300', 10);
 const DISABLE_RATE_LIMIT =
   process.env.DISABLE_RATE_LIMIT === 'true' ||
   process.env.NODE_ENV !== 'production';
 
 const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 15 * 60 * 1000,
   max: RATE_LIMIT_MAX,
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: (req) => ipKeyGenerator(req.ip || req.socket?.remoteAddress || 'unknown-ip'),
   handler: (req, res, next, options) => {
-    // Ensure CORS headers are always present when rate limiting triggers
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
     res.setHeader(
       'Access-Control-Allow-Headers',
       'Origin, X-Requested-With, Content-Type, Accept, Authorization'
@@ -85,8 +86,8 @@ const apiLimiter = rateLimit({
 if (DISABLE_RATE_LIMIT) {
   console.log('Rate limiting disabled (development mode or DISABLE_RATE_LIMIT=true)');
 } else {
-  console.log(`Rate limiting enabled (max ${RATE_LIMIT_MAX} requests per 15min)`);
-  app.use('/api/', apiLimiter);
+  console.log(`Rate limiting enabled (max ${RATE_LIMIT_MAX} requests per 15min, keyed by forwarded IP)`);
+  app.use('/api', apiLimiter);
 }
 
 app.use(express.json());
