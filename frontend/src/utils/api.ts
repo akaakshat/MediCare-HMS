@@ -18,6 +18,8 @@ interface ApiOptions {
 export class ApiClient {
   // Frontend talks to backend at BASE_URL; auth token stored in sessionStorage for per-tab login
   private static sessionRequestPromise: Promise<any> | null = null;
+  private static readonly SESSION_CHECK_KEY = 'hospital_session_check_active';
+  private static readonly SESSION_CHECK_COOLDOWN_MS = 15000;
 
   private static normalizeStringArray(input?: any[]): string[] {
     if (!Array.isArray(input)) return [];
@@ -173,10 +175,27 @@ export class ApiClient {
   }
 
   static async getSession() {
+    const activeCheck = sessionStorage.getItem(this.SESSION_CHECK_KEY);
+    const lastCheck = Number(sessionStorage.getItem('hospital_session_check_time') || '0');
+    const now = Date.now();
+
     if (this.sessionRequestPromise) {
       return this.sessionRequestPromise;
     }
 
+    if (activeCheck === '1' || (lastCheck > 0 && now - lastCheck < this.SESSION_CHECK_COOLDOWN_MS)) {
+      const cachedUser = sessionStorage.getItem('hospital_user');
+      if (cachedUser) {
+        try {
+          return { success: true, user: JSON.parse(cachedUser) };
+        } catch (e) {
+          // Ignore invalid cached payload and continue with network validation
+        }
+      }
+      return Promise.resolve({ success: false, message: 'Session check already in progress' });
+    }
+
+    sessionStorage.setItem(this.SESSION_CHECK_KEY, '1');
     this.sessionRequestPromise = this.request('/auth/session')
       .then((result) => {
         if (result?.user) {
@@ -186,9 +205,15 @@ export class ApiClient {
             sessionStorage.setItem('hospital_access_token', result.token);
           }
         }
+        sessionStorage.setItem('hospital_session_check_time', String(Date.now()));
         return result;
       })
+      .catch((error) => {
+        sessionStorage.setItem('hospital_session_check_time', String(Date.now()));
+        throw error;
+      })
       .finally(() => {
+        sessionStorage.removeItem(this.SESSION_CHECK_KEY);
         this.sessionRequestPromise = null;
       });
 

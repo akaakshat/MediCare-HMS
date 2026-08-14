@@ -62,27 +62,47 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       sessionStorage.getItem('token') ||
       localStorage.getItem('hospital_access_token') ||
       localStorage.getItem('token');
-    if (stored) {
-      setToken(stored);
-      ApiClient.getSession()
-        .then((data: any) => {
-          const u = data?.user || data;
-          const normalized = normalizeUserAccess(u);
-          if (normalized) {
-            sessionStorage.setItem('hospital_user', JSON.stringify(normalized));
-          }
-          setUser(normalized);
-        })
-        .catch(() => {
-          // Clear stale auth state when session validation fails.
-          ApiClient.logout();
-          setToken(null);
-          setUser(null);
-        })
-        .finally(() => setLoading(false));
-    } else {
+
+    if (!stored) {
       setLoading(false);
+      return;
     }
+
+    const sessionCheckKey = 'hospital_session_check_active';
+    const lastSessionCheck = Number(sessionStorage.getItem('hospital_session_check_time') || '0');
+    const now = Date.now();
+
+    if (sessionStorage.getItem(sessionCheckKey) === '1' || (lastSessionCheck > 0 && now - lastSessionCheck < 15000)) {
+      const cachedUser = sessionStorage.getItem('hospital_user');
+      if (cachedUser) {
+        try {
+          const parsed = JSON.parse(cachedUser);
+          setUser(normalizeUserAccess(parsed));
+        } catch (e) {
+          // Ignore invalid cache payloads and fall back to unauthenticated state.
+        }
+      }
+      setToken(stored);
+      setLoading(false);
+      return;
+    }
+
+    setToken(stored);
+    ApiClient.getSession()
+      .then((data: any) => {
+        const u = data?.user || data;
+        const normalized = normalizeUserAccess(u);
+        if (normalized) {
+          sessionStorage.setItem('hospital_user', JSON.stringify(normalized));
+        }
+        setUser(normalized);
+      })
+      .catch(() => {
+        ApiClient.logout();
+        setToken(null);
+        setUser(null);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   // Listen for global auth invalidation events (e.g., token expired)

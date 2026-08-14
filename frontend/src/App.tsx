@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Users, Calendar, Stethoscope, FileText, Pill, CreditCard, BarChart3, UserPlus, ClipboardList, Activity, TrendingUp, Settings as SettingsIcon } from 'lucide-react';
 import { Sidebar } from './components/layout/Sidebar';
 import { Header } from './components/layout/Header';
@@ -106,6 +106,7 @@ export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [dbConnectionError, setDbConnectionError] = useState(false);
+  const authCheckStartedRef = useRef(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeModule, setActiveModule] = useState('dashboard');
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -178,6 +179,9 @@ export default function App() {
   }, []);
 
   const checkSystemHealth = async () => {
+    if (authCheckStartedRef.current) return;
+    authCheckStartedRef.current = true;
+
     try {
       // Check API reachability + basic health
       const healthResponse = await fetch(`${API_URL}/health`);
