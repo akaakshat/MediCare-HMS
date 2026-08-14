@@ -67,12 +67,26 @@ const DISABLE_RATE_LIMIT =
   process.env.DISABLE_RATE_LIMIT === 'true' ||
   process.env.NODE_ENV !== 'production';
 
+const getClientIp = (req) => {
+  const forwardedFor = req.headers['x-forwarded-for'];
+  if (typeof forwardedFor === 'string' && forwardedFor.trim()) {
+    return forwardedFor.split(',')[0].trim();
+  }
+  return req.ip || req.socket?.remoteAddress || 'unknown-ip';
+};
+
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: RATE_LIMIT_MAX,
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => ipKeyGenerator(req.ip || req.socket?.remoteAddress || 'unknown-ip'),
+  skip: (req) => {
+    const path = req.originalUrl || req.url || '';
+    return path.startsWith('/api/auth/session') ||
+      path.startsWith('/api/auth/login') ||
+      path.startsWith('/api/health');
+  },
+  keyGenerator: (req) => ipKeyGenerator(getClientIp(req)),
   handler: (req, res, next, options) => {
     res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
     res.setHeader(
