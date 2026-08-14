@@ -12,8 +12,10 @@ export const buildConflictSummary = (serverVersion: any, localPayload: any) => {
   };
 };
 
+import { API_BASE_URL } from '../utils/api';
+
 export const postConflictResolution = async (payload: ConflictResolutionPayload) => {
-  const response = await fetch('/api/sync/conflict', {
+  const response = await fetch(`${API_BASE_URL}/api/sync/conflict`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
