@@ -233,9 +233,37 @@
     @apply border-slate-700 bg-slate-900/80 shadow-[0_12px_32px_rgba(2,6,23,0.55)];
   }
 
-  body.dark .bg-white {
-    background-color: #111827 !important;
+  body.dark .bg-white,
+  body.dark .bg-white\/80,
+  body.dark .bg-white\/90,
+  body.dark .bg-white\/95,
+  body.dark .bg-slate-50,
+  body.dark .bg-slate-100,
+  body.dark .bg-slate-900,
+  body.dark .bg-slate-950 {
+    background-color: #0f172a !important;
     color: #f8fafc !important;
+  }
+
+  body.dark .hover\:bg-slate-50:hover,
+  body.dark .hover\:bg-slate-100:hover,
+  body.dark .hover\:bg-white:hover,
+  body.dark .hover\:bg-white\/90:hover {
+    background-color: rgba(15, 23, 42, 0.92) !important;
+  }
+
+  body.dark .text-slate-700,
+  body.dark .text-slate-800,
+  body.dark .text-slate-900,
+  body.dark .text-slate-600,
+  body.dark .text-slate-500 {
+    color: #e2e8f0 !important;
+  }
+
+  body.dark .border-slate-200,
+  body.dark .border-slate-100,
+  body.dark .border-slate-700 {
+    border-color: rgba(148, 163, 184, 0.28) !important;
   }
 
   body.dark .bg-gray-50 {

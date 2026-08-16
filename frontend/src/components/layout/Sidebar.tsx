@@ -106,9 +106,9 @@ export function Sidebar({ isOpen, activeModule, onModuleChange }: SidebarProps) 
     <aside
       className={`${
         isOpen ? 'w-72' : 'w-0'
-      } flex min-h-0 flex-col overflow-hidden border-r border-slate-200 bg-white/90 text-slate-800 shadow-[0_0_0_1px_rgba(148,163,184,0.08)] transition-all duration-300 backdrop-blur-xl`}
+      } flex min-h-0 flex-col overflow-hidden border-r border-slate-200 bg-white/90 text-slate-800 shadow-[0_0_0_1px_rgba(148,163,184,0.08)] transition-all duration-300 backdrop-blur-xl dark:border-slate-700 dark:bg-slate-950/95 dark:text-slate-100`}
     >
-      <div className="border-b border-slate-200 px-5 py-5">
+      <div className="border-b border-slate-200 px-5 py-5 dark:border-slate-700">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-blue-600 shadow-sm">
             <Stethoscope className="h-4 w-4" />
@@ -135,10 +135,10 @@ export function Sidebar({ isOpen, activeModule, onModuleChange }: SidebarProps) 
               disabled={!item.enabled}
               className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left transition-all duration-200 ${
                 activeModule === item.id
-                  ? 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-100 shadow-[0_8px_18px_rgba(59,130,246,0.08)]'
+                  ? 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-100 shadow-[0_8px_18px_rgba(59,130,246,0.08)] dark:bg-blue-500/10 dark:text-blue-200 dark:ring-blue-400/20'
                   : item.enabled
-                    ? 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-                    : 'cursor-not-allowed bg-slate-50 text-slate-400'
+                    ? 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'
+                    : 'cursor-not-allowed bg-slate-50 text-slate-400 dark:bg-slate-800 dark:text-slate-500'
               }`}
             >
               <span className="flex min-w-0 items-center gap-3">
@@ -151,15 +151,15 @@ export function Sidebar({ isOpen, activeModule, onModuleChange }: SidebarProps) 
         </nav>
       )}
 
-      <div className="space-y-2 border-t border-slate-200 p-3">
+      <div className="space-y-2 border-t border-slate-200 p-3 dark:border-slate-700">
         <button
           onClick={() => onModuleChange('settings')}
-          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
         >
           <Settings className="h-4 w-4" />
           <span>Settings</span>
         </button>
-        <button className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50 hover:text-rose-700">
+        <button className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50 hover:text-rose-700 dark:text-rose-300 dark:hover:bg-rose-500/10 dark:hover:text-rose-200">
           <LogOut className="h-4 w-4" />
           <span>Logout</span>
         </button>

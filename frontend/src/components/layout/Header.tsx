@@ -197,7 +197,7 @@ export function Header({ onMenuClick, activeModule, onModuleChange, theme = 'lig
           <button
             type="button"
             onClick={onThemeToggle}
-            className="hidden md:inline-flex items-center justify-center rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-slate-700 transition hover:bg-slate-100"
+            className="hidden md:inline-flex items-center justify-center rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
             aria-label="Toggle theme"
             title="Toggle theme"
           >
@@ -265,7 +265,7 @@ export function Header({ onMenuClick, activeModule, onModuleChange, theme = 'lig
                   ]);
                 }
               }}
-              className="relative rounded-xl border border-slate-200 bg-white/80 p-2 shadow-sm transition-all hover:bg-slate-50"
+              className="relative rounded-xl border border-slate-200 bg-white/80 p-2 shadow-sm transition-all hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900/80 dark:hover:bg-slate-800"
               aria-haspopup="true"
               title="Notifications"
             >
@@ -274,14 +274,14 @@ export function Header({ onMenuClick, activeModule, onModuleChange, theme = 'lig
             </button>
 
             {notifOpen && (
-              <div className="absolute right-0 mt-2 w-72 rounded-2xl border border-slate-200 bg-white/90 shadow-2xl shadow-slate-200/70 z-50 backdrop-blur-xl">
+              <div className="absolute right-0 mt-2 w-72 rounded-2xl border border-slate-200 bg-white/90 shadow-2xl shadow-slate-200/70 z-50 backdrop-blur-xl dark:border-slate-700 dark:bg-slate-900/95 dark:shadow-slate-950/50">
                 <div className="border-b border-slate-100 p-3 text-sm font-semibold text-slate-700">Notifications</div>
                 <div className="max-h-60 overflow-auto">
                   {notifications.length === 0 ? (
                     <div className="p-3 text-sm text-slate-500">No notifications</div>
                   ) : (
                     notifications.map((n) => (
-                      <div key={n.id} className="border-b border-slate-100 p-3 last:border-b-0 hover:bg-slate-50">
+                      <div key={n.id} className="border-b border-slate-100 p-3 last:border-b-0 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800/90">
                         <div className="text-sm font-medium text-slate-800">{n.title}</div>
                         <div className="text-xs text-slate-500">{n.message}</div>
                         <div className="mt-1 text-[11px] text-slate-400">{n.time}</div>
@@ -293,7 +293,7 @@ export function Header({ onMenuClick, activeModule, onModuleChange, theme = 'lig
             )}
           </div>
 
-          <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white/80 px-3 py-2 shadow-sm pl-4">
+          <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white/80 px-3 py-2 shadow-sm pl-4 dark:border-slate-700 dark:bg-slate-900/80">
             <div className="hidden text-right md:block">
               <p className="text-sm font-medium text-slate-900">{currentUser?.name || 'User'}</p>
               <p className="text-xs capitalize text-slate-500">{currentUser?.role || 'Staff'}</p>
@@ -309,7 +309,7 @@ export function Header({ onMenuClick, activeModule, onModuleChange, theme = 'lig
               </div>
 
               {profileOpen && (
-                <div className="absolute left-1/2 top-full z-[60] mt-2 w-56 -translate-x-1/2 rounded-2xl border border-slate-200 bg-white/90 shadow-2xl shadow-slate-200/70 backdrop-blur-xl">
+                <div className="absolute left-1/2 top-full z-[60] mt-2 w-56 -translate-x-1/2 rounded-2xl border border-slate-200 bg-white/90 shadow-2xl shadow-slate-200/70 backdrop-blur-xl dark:border-slate-700 dark:bg-slate-900/95 dark:shadow-slate-950/60">
                   <div className="p-4">
                     <div className="flex items-center gap-3">
                       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-blue-600">
@@ -327,7 +327,7 @@ export function Header({ onMenuClick, activeModule, onModuleChange, theme = 'lig
                         onClick={() => {
                           window.location.href = '/profile';
                         }}
-                        className="w-full text-left rounded-xl px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
+                        className="w-full text-left rounded-xl px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
                       >
                         View Profile
                       </button>

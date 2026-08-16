@@ -576,90 +576,114 @@ export function OPCaseSheet({ onBack }: OPCaseSheetProps) {
 
           <div className="lg:col-span-2 bg-white rounded-lg shadow border border-gray-200 p-6">
             {caseSheets.filter(s => s.uhid === selectedPatient).map((sheet) => (
-              <div key={sheet._id || sheet.id} className="space-y-6">
-                <div className="flex items-start gap-4 pb-6 border-b border-gray-200">
-                  <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
-                    <User className="w-8 h-8 text-orange-600" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-gray-900 mb-2">{sheet.patient}</h3>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <p className="text-gray-500">UHID</p>
-                        <p className="text-gray-900">{sheet.uhid}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500">Date</p>
-                        <p className="text-gray-900">{formatDateDDMMYYYY(sheet.date)}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500">Doctor</p>
-                        <p className="text-gray-900">{sheet.doctor}</p>
-                      </div>
+              <div key={sheet._id || sheet.id} className="space-y-4">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 shadow-sm">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-slate-600 ring-1 ring-slate-200">
+                      <User className="h-5 w-5" />
                     </div>
-                    {sheet.history?.length ? (
-                      <p className="text-xs text-gray-500 mt-3">
-                        Last updated by {sheet.history[sheet.history.length - 1]?.byName || 'Unknown'} on {formatDateTimeDDMMYYYY(sheet.history[sheet.history.length - 1]?.at)}
-                      </p>
-                    ) : null}
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-end gap-x-5 gap-y-2">
+                        <div className="min-w-0">
+                          <div className="text-[18px] font-semibold tracking-[-0.02em] text-slate-900">{sheet.patient}</div>
+                          <div className="text-[10px] font-medium uppercase tracking-[0.18em] text-slate-500">Patient</div>
+                        </div>
+
+                        <div className="min-w-[120px]">
+                          <div className="text-[10px] font-medium uppercase tracking-[0.18em] text-slate-500">UHID</div>
+                          <div className="text-sm font-medium text-slate-800">{sheet.uhid}</div>
+                        </div>
+
+                        <div className="min-w-[120px]">
+                          <div className="text-[10px] font-medium uppercase tracking-[0.18em] text-slate-500">Doctor</div>
+                          <div className="text-sm font-medium text-slate-800">{sheet.doctor}</div>
+                        </div>
+
+                        <div className="min-w-[120px]">
+                          <div className="text-[10px] font-medium uppercase tracking-[0.18em] text-slate-500">Date</div>
+                          <div className="text-sm font-medium text-slate-800">{formatDateDDMMYYYY(sheet.date)}</div>
+                        </div>
+                      </div>
+
+                      {sheet.history?.length ? (
+                        <div className="mt-3 flex justify-end">
+                          <p className="text-[11px] text-slate-500">
+                            Last updated by {sheet.history[sheet.history.length - 1]?.byName || 'Unknown'} · {formatDateDDMMYYYY(sheet.history[sheet.history.length - 1]?.at)} · {new Date(sheet.history[sheet.history.length - 1]?.at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+                          </p>
+                        </div>
+                      ) : null}
+                    </div>
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Activity className="w-5 h-5 text-orange-600" />
-                      <h4 className="text-gray-900">Chief Complaint</h4>
+                <div className="grid gap-3 xl:grid-cols-2">
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4 shadow-sm">
+                    <div className="mb-2 flex items-center gap-2">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                        <Activity className="h-4 w-4" />
+                      </div>
+                      <h4 className="text-[15px] font-semibold text-slate-900">Chief Complaint</h4>
                     </div>
-                    <p className="text-gray-600">{sheet.complaint}</p>
+                    <p className="text-[13px] leading-6 text-slate-600">{sheet.complaint}</p>
                   </div>
 
                   {sheet.hopi && (
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <FileText className="w-5 h-5 text-orange-600" />
-                        <h4 className="text-gray-900">HOPI (History of Present Illness)</h4>
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4 shadow-sm">
+                      <div className="mb-2 flex items-center gap-2">
+                        <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                          <FileText className="h-4 w-4" />
+                        </div>
+                        <h4 className="text-[15px] font-semibold text-slate-900">HOPI</h4>
                       </div>
-                      <p className="text-gray-600 whitespace-pre-wrap">{sheet.hopi}</p>
+                      <p className="text-[13px] leading-6 text-slate-600 whitespace-pre-wrap">{sheet.hopi}</p>
                     </div>
                   )}
 
                   {sheet.physicalExamination && (
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Activity className="w-5 h-5 text-orange-600" />
-                        <h4 className="text-gray-900">Physical Examination</h4>
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4 shadow-sm xl:col-span-2">
+                      <div className="mb-2 flex items-center gap-2">
+                        <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                          <Activity className="h-4 w-4" />
+                        </div>
+                        <h4 className="text-[15px] font-semibold text-slate-900">Physical Examination</h4>
                       </div>
-                      <p className="text-gray-600 whitespace-pre-wrap">{sheet.physicalExamination}</p>
+                      <p className="text-[13px] leading-6 text-slate-600 whitespace-pre-wrap">{sheet.physicalExamination}</p>
                     </div>
                   )}
 
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <FileText className="w-5 h-5 text-orange-600" />
-                      <h4 className="text-gray-900">Diagnosis</h4>
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4 shadow-sm">
+                    <div className="mb-2 flex items-center gap-2">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                        <FileText className="h-4 w-4" />
+                      </div>
+                      <h4 className="text-[15px] font-semibold text-slate-900">Diagnosis</h4>
                     </div>
-                    <p className="text-gray-600">{sheet.diagnosis}</p>
+                    <p className="text-[13px] leading-6 text-slate-600">{sheet.diagnosis}</p>
                   </div>
 
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Pill className="w-5 h-5 text-orange-600" />
-                      <h4 className="text-gray-900">Prescription</h4>
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4 shadow-sm">
+                    <div className="mb-2 flex items-center gap-2">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                        <Pill className="h-4 w-4" />
+                      </div>
+                      <h4 className="text-[15px] font-semibold text-slate-900">Prescription</h4>
                     </div>
-                    <p className="text-gray-600">{sheet.prescription}</p>
+                    <p className="text-[13px] leading-6 text-slate-600">{sheet.prescription}</p>
                   </div>
 
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <TestTube className="w-5 h-5 text-orange-600" />
-                      <h4 className="text-gray-900">Investigations</h4>
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4 shadow-sm xl:col-span-2">
+                    <div className="mb-2 flex items-center gap-2">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                        <TestTube className="h-4 w-4" />
+                      </div>
+                      <h4 className="text-[15px] font-semibold text-slate-900">Investigations</h4>
                     </div>
-                    <p className="text-gray-600">{sheet.tests}</p>
+                    <p className="text-[13px] leading-6 text-slate-600">{sheet.tests}</p>
                   </div>
                 </div>
 
-                <div className="flex gap-3 pt-4">
+                <div className="flex gap-3 pt-2">
                   <button
                     onClick={() => handlePrint(sheet)}
                     className={`px-4 py-2 border border-gray-300 rounded-lg transition-colors ${user?.role === 'doctor' ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
