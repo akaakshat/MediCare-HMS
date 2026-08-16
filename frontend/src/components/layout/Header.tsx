@@ -303,14 +303,14 @@ export function Header({ onMenuClick, activeModule, onModuleChange, theme = 'lig
               ref={profileRef}
               onMouseEnter={() => setProfileOpen(true)}
               onMouseLeave={() => setProfileOpen(false)}
-              className="relative flex items-center gap-3"
+              className="relative z-50 flex items-center gap-3"
             >
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-blue-600">
                 <User className="h-5 w-5 text-white" />
               </div>
 
               {profileOpen && (
-                <div className="absolute right-0 top-full mt-2 w-56 rounded-2xl border border-slate-200 bg-white/90 shadow-2xl shadow-slate-200/70 z-50 backdrop-blur-xl">
+                <div className="absolute left-1/2 top-full z-[60] mt-2 w-56 -translate-x-1/2 rounded-2xl border border-slate-200 bg-white/90 shadow-2xl shadow-slate-200/70 backdrop-blur-xl">
                   <div className="p-4">
                     <div className="flex items-center gap-3">
                       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-blue-600">

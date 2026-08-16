@@ -367,6 +367,22 @@ export default function App() {
       : []),
   ];
 
+  const moduleIconPalette: Record<string, string> = {
+    'bg-blue-500': 'border border-blue-100 bg-blue-50 text-blue-600',
+    'bg-green-500': 'border border-emerald-100 bg-emerald-50 text-emerald-600',
+    'bg-purple-500': 'border border-violet-100 bg-violet-50 text-violet-600',
+    'bg-orange-500': 'border border-amber-100 bg-amber-50 text-amber-600',
+    'bg-pink-500': 'border border-pink-100 bg-pink-50 text-pink-600',
+    'bg-yellow-500': 'border border-yellow-100 bg-yellow-50 text-yellow-600',
+    'bg-teal-500': 'border border-teal-100 bg-teal-50 text-teal-600',
+    'bg-indigo-500': 'border border-indigo-100 bg-indigo-50 text-indigo-600',
+    'bg-sky-500': 'border border-sky-100 bg-sky-50 text-sky-600',
+    'bg-red-500': 'border border-rose-100 bg-rose-50 text-rose-600',
+    'bg-slate-500': 'border border-slate-200 bg-slate-100 text-slate-600',
+    'bg-gray-500': 'border border-slate-200 bg-slate-100 text-slate-600',
+    'bg-cyan-600': 'border border-cyan-100 bg-cyan-50 text-cyan-600',
+  };
+
   const modules = [
     { id: 'patients', title: 'Patient Management', icon: Users, color: 'bg-blue-500', component: PatientList },
     { id: 'appointments', title: 'Appointments', icon: Calendar, color: 'bg-green-500', component: AppointmentList },
@@ -471,6 +487,7 @@ export default function App() {
               {dashboardModules.map((module) => {
                 const accessState = moduleAccessState[module.id] || { visible: true, enabled: false };
                 const isEnabled = accessState.enabled;
+                const softModuleStyle = moduleIconPalette[module.color] || 'border border-slate-200 bg-slate-100 text-slate-600';
 
                 return (
                   <button
@@ -483,8 +500,8 @@ export default function App() {
                         : 'cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400'
                     }`}
                   >
-                    <div className={`${module.color} mb-4 flex h-11 w-11 items-center justify-center rounded-xl ${isEnabled ? 'group-hover:scale-[1.03]' : ''} transition-transform`}>
-                      <module.icon className="h-5 w-5 text-white" />
+                    <div className={`${softModuleStyle} mb-4 flex h-10 w-10 items-center justify-center rounded-xl transition-transform ${isEnabled ? 'group-hover:scale-[1.02]' : ''}`}>
+                      <module.icon className="h-4 w-4" />
                     </div>
                     <h3 className="mb-2 text-base font-semibold text-slate-900">{module.title}</h3>
                     <p className="text-sm text-slate-500">
