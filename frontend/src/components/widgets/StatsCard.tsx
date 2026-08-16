@@ -10,18 +10,18 @@ interface StatsCardProps {
 
 export function StatsCard({ title, value, icon: Icon, change, trend }: StatsCardProps) {
   return (
-    <div className="glass-panel rounded-[24px] p-6 transition-all duration-200 hover:-translate-y-1">
-      <div className="mb-5 flex items-center justify-between">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-sky-500 shadow-lg shadow-blue-500/20">
-          <Icon className="h-6 w-6 text-white" />
+    <div className="premium-panel p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-[0_16px_35px_rgba(37,99,235,0.08)]">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-700 ring-1 ring-blue-100">
+          <Icon className="h-5 w-5" />
         </div>
-        <div className={`flex items-center gap-1 text-sm font-medium ${trend === 'up' ? 'text-emerald-600' : 'text-rose-600'}`}>
-          {trend === 'up' ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
+        <div className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] font-semibold ${trend === 'up' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-rose-200 bg-rose-50 text-rose-700'}`}>
+          {trend === 'up' ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
           <span>{change}</span>
         </div>
       </div>
-      <p className="mb-1 text-sm text-slate-500">{title}</p>
-      <h3 className="text-2xl font-semibold tracking-tight text-slate-900">{value}</h3>
+      <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">{title}</p>
+      <h3 className="text-[1.7rem] font-semibold tracking-[-0.04em] text-slate-900">{value}</h3>
     </div>
   );
 }

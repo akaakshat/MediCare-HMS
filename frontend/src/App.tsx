@@ -278,11 +278,12 @@ export default function App() {
           : Promise.resolve({ bills: [] });
         const alertsPromise = ApiClient.get('/alerts/summary').catch(() => ({ summary: {} }));
 
-        const [pRes, aRes, dRes, bRes, alertsRes] = await Promise.all([pPromise, aPromise, dPromise, bPromise, alertsPromise]);
+        const [pRes, aRes, dRes, bRes, alertsRes] = await Promise.all([pPromise, aPromise, dPromise, bPromise, alertsPromise]) as [any, any, any, any, any];
 
         const patientsCount = pRes?.patients?.length ?? (Array.isArray(pRes) ? pRes.length : 0);
         const appointmentsCount = aRes?.appointments?.length ?? (Array.isArray(aRes) ? aRes.length : 0);
         const doctorsCount = dRes?.doctors?.length ?? (Array.isArray(dRes) ? dRes.length : 0);
+        const alertsSummary = alertsRes?.summary ?? {};
 
         // Sum today's revenue if bills include amount and createdAt
         let revenueToday = 0;
@@ -302,9 +303,9 @@ export default function App() {
 
         setStatsState({ patientsCount, appointmentsCount, doctorsCount, revenueToday });
         setAlertSummary({
-          overdueFollowUps: Number(alertsRes?.summary?.overdueFollowUps ?? 0),
-          followUpsDueSoon: Number(alertsRes?.summary?.followUpsDueSoon ?? 0),
-          highRiskPatients: Number(alertsRes?.summary?.highRiskPatients ?? 0),
+          overdueFollowUps: Number(alertsSummary?.overdueFollowUps ?? 0),
+          followUpsDueSoon: Number(alertsSummary?.followUpsDueSoon ?? 0),
+          highRiskPatients: Number(alertsSummary?.highRiskPatients ?? 0),
         });
       } catch (err) {
         console.error('Error fetching metrics:', err);
@@ -413,22 +414,24 @@ export default function App() {
       if (visibleModules.length === 0) return <NoAccessPage />;
       return (
         <div className="space-y-6">
-          {/* Stats Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
             {stats.map((stat, index) => (
               <StatsCard key={index} {...stat} />
             ))}
           </div>
 
           {role === 'doctor' && (
-            <div className="bg-white rounded-lg shadow border border-gray-200 p-6 mt-6">
-              <h3 className="text-lg font-semibold mb-3">My Availability</h3>
+            <div className="premium-panel p-5 mt-2">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <h3 className="text-base font-semibold text-slate-900">My Availability</h3>
+                <span className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-blue-700">schedule</span>
+              </div>
               {doctorAvailability.length === 0 ? (
-                <p className="text-sm text-gray-500">No availability schedule found. Ask admin/receptionist to set your schedule.</p>
+                <p className="text-sm text-slate-500">No availability schedule found. Ask admin/receptionist to set your schedule.</p>
               ) : (
                 <ul className="space-y-2">
                   {doctorAvailability.map((slot) => (
-                    <li key={slot} className="text-sm text-gray-700">
+                    <li key={slot} className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
                       {formatScheduleItem(slot)}
                     </li>
                   ))}
@@ -437,18 +440,18 @@ export default function App() {
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-            <div className="bg-white rounded-lg shadow border border-gray-200 p-6">
-              <p className="text-sm text-gray-500">Overdue Follow-ups</p>
-              <h3 className="text-2xl font-semibold text-gray-900 mt-2">{alertSummary.overdueFollowUps}</h3>
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+            <div className="premium-panel p-5">
+              <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">Overdue Follow-ups</p>
+              <h3 className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-slate-900">{alertSummary.overdueFollowUps}</h3>
             </div>
-            <div className="bg-white rounded-lg shadow border border-gray-200 p-6">
-              <p className="text-sm text-gray-500">Follow-ups Due Soon</p>
-              <h3 className="text-2xl font-semibold text-gray-900 mt-2">{alertSummary.followUpsDueSoon}</h3>
+            <div className="premium-panel p-5">
+              <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">Follow-ups Due Soon</p>
+              <h3 className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-slate-900">{alertSummary.followUpsDueSoon}</h3>
             </div>
-            <div className="bg-white rounded-lg shadow border border-gray-200 p-6">
-              <p className="text-sm text-gray-500">High-risk Patients</p>
-              <h3 className="text-2xl font-semibold text-gray-900 mt-2">{alertSummary.highRiskPatients}</h3>
+            <div className="premium-panel p-5">
+              <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">High-risk Patients</p>
+              <h3 className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-slate-900">{alertSummary.highRiskPatients}</h3>
             </div>
           </div>
 
@@ -460,10 +463,11 @@ export default function App() {
             userName={currentUser?.name || 'there'}
           />
 
-          {/* Modules Grid */}
           <div>
-            <h2 className="mb-6">All Modules</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h2 className="text-base font-semibold text-slate-900">All Modules</h2>
+            </div>
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
               {dashboardModules.map((module) => {
                 const accessState = moduleAccessState[module.id] || { visible: true, enabled: false };
                 const isEnabled = accessState.enabled;
@@ -473,19 +477,17 @@ export default function App() {
                     key={module.id}
                     onClick={() => isEnabled && setActiveModule(module.id)}
                     disabled={!isEnabled}
-                    className={`rounded-lg p-6 shadow transition-all border text-left group ${
+                    className={`rounded-2xl border p-5 text-left transition-all duration-200 ${
                       isEnabled
-                        ? 'bg-white hover:shadow-lg border-gray-200 hover:border-gray-300'
-                        : 'bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed'
+                        ? 'border-slate-200 bg-white shadow-[0_10px_28px_rgba(15,23,42,0.04)] hover:border-blue-200 hover:shadow-[0_14px_30px_rgba(37,99,235,0.08)]'
+                        : 'cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400'
                     }`}
                   >
-                    <div className={`${module.color} w-12 h-12 rounded-lg flex items-center justify-center mb-4 ${isEnabled ? 'group-hover:scale-110' : ''} transition-transform`}>
-                      <module.icon className="w-6 h-6 text-white" />
+                    <div className={`${module.color} mb-4 flex h-11 w-11 items-center justify-center rounded-xl ${isEnabled ? 'group-hover:scale-[1.03]' : ''} transition-transform`}>
+                      <module.icon className="h-5 w-5 text-white" />
                     </div>
-                    <div className="flex items-center justify-between gap-2">
-                      <h3 className="text-gray-900 mb-2">{module.title}</h3>
-                    </div>
-                    <p className="text-gray-500 text-sm">
+                    <h3 className="mb-2 text-base font-semibold text-slate-900">{module.title}</h3>
+                    <p className="text-sm text-slate-500">
                       {isEnabled ? `Manage and view ${module.title.toLowerCase()}` : 'Access denied'}
                     </p>
                   </button>
@@ -494,8 +496,7 @@ export default function App() {
             </div>
           </div>
 
-          {/* Quick Actions */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
             {(() => {
               const commonActions = [
                 {
@@ -503,7 +504,7 @@ export default function App() {
                   description: 'Add a new patient to the system',
                   icon: UserPlus,
                   module: 'patients',
-                  gradient: 'from-blue-500 to-blue-600',
+                  gradient: 'from-blue-600 to-blue-500',
                   buttonText: 'Add Patient',
                 },
                 {
@@ -511,7 +512,7 @@ export default function App() {
                   description: 'Schedule a new appointment',
                   icon: ClipboardList,
                   module: 'appointments',
-                  gradient: 'from-green-500 to-green-600',
+                  gradient: 'from-emerald-600 to-emerald-500',
                   buttonText: 'Book Now',
                 },
                 {
@@ -519,7 +520,7 @@ export default function App() {
                   description: 'Check hospital performance',
                   icon: Activity,
                   module: 'reports',
-                  gradient: 'from-purple-500 to-purple-600',
+                  gradient: 'from-violet-600 to-violet-500',
                   buttonText: 'View Reports',
                 },
                 {
@@ -527,7 +528,7 @@ export default function App() {
                   description: 'View and manage patient records',
                   icon: FileText,
                   module: 'emr',
-                  gradient: 'from-orange-500 to-orange-600',
+                  gradient: 'from-amber-500 to-orange-500',
                   buttonText: 'Open EMR',
                 },
                 {
@@ -535,7 +536,7 @@ export default function App() {
                   description: 'Update doctor availability and schedule',
                   icon: Stethoscope,
                   module: 'doctors',
-                  gradient: 'from-purple-500 to-purple-600',
+                  gradient: 'from-sky-600 to-cyan-500',
                   buttonText: 'View Schedule',
                 },
                 {
@@ -543,14 +544,14 @@ export default function App() {
                   description: 'Create and manage billing records',
                   icon: CreditCard,
                   module: 'billing',
-                  gradient: 'from-yellow-500 to-yellow-600',
+                  gradient: 'from-amber-500 to-yellow-500',
                   buttonText: 'Go to Billing',
                 },
               ];
 
               const actionsByRole: Record<string, typeof commonActions> = {
                 doctor: [
-                  commonActions.find((a) => a.module === 'doctors')!, // Schedule
+                  commonActions.find((a) => a.module === 'doctors')!,
                   commonActions.find((a) => a.module === 'appointments')!,
                   commonActions.find((a) => a.module === 'emr')!,
                 ],
@@ -583,14 +584,14 @@ export default function App() {
                 .map((action) => (
                   <div
                     key={action.module}
-                    className={`bg-linear-to-br ${action.gradient} rounded-lg p-6 text-white`}
+                    className={`rounded-2xl bg-linear-to-br ${action.gradient} p-5 text-white shadow-[0_18px_30px_rgba(15,23,42,0.12)]`}
                   >
-                    <action.icon className="w-8 h-8 mb-3" />
-                    <h3 className="mb-2">{action.title}</h3>
-                    <p className="text-white/90 text-sm mb-4">{action.description}</p>
+                    <action.icon className="mb-3 h-8 w-8" />
+                    <h3 className="mb-2 text-base font-semibold">{action.title}</h3>
+                    <p className="mb-4 text-sm text-white/85">{action.description}</p>
                     <button
                       onClick={() => setActiveModule(action.module)}
-                      className={`bg-white text-gray-900 px-4 py-2 rounded-lg text-sm hover:bg-white/90 transition-colors`}
+                      className="rounded-xl bg-white/95 px-3.5 py-2 text-sm font-semibold text-slate-900 transition hover:bg-white"
                     >
                       {action.buttonText}
                     </button>
@@ -612,7 +613,7 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-slate-100 text-slate-900 antialiased">
       <Toaster position="top-right" richColors />
       <Sidebar 
         isOpen={sidebarOpen} 
@@ -620,7 +621,7 @@ export default function App() {
         onModuleChange={setActiveModule}
       />
       
-      <div className="flex-1 flex flex-col overflow-hidden bg-gray-50 text-gray-900 dark:bg-slate-950 dark:text-slate-100">
+      <div className="flex flex-1 flex-col overflow-hidden bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.09),transparent_20%),linear-gradient(180deg,#f5f8ff_0%,#eef4fb_100%)] text-slate-900 dark:bg-slate-950 dark:text-slate-100">
         <Header 
           onMenuClick={() => setSidebarOpen(!sidebarOpen)}
           activeModule={activeModule}
@@ -629,7 +630,7 @@ export default function App() {
           onThemeToggle={toggleTheme}
         />
         
-        <main className="flex-1 overflow-y-auto p-6 bg-gray-50 text-gray-900 dark:bg-slate-950 dark:text-slate-100">
+        <main className="flex-1 overflow-y-auto bg-transparent p-6 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
           {renderContent()}
         </main>
       </div>
