@@ -438,7 +438,7 @@ export default function App() {
             <p className="text-sm text-slate-500">Welcome back, {currentUser?.name || 'User'}</p>
           </div>
 
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
             {stats.map((stat, index) => (
               <StatsCard key={index} {...stat} />
             ))}
@@ -464,18 +464,18 @@ export default function App() {
             </div>
           )}
 
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-            <div className="premium-panel p-5">
-              <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">Overdue Follow-ups</p>
-              <h3 className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-slate-900">{alertSummary.overdueFollowUps}</h3>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className="premium-panel flex h-[92px] flex-col justify-center p-4">
+              <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-slate-500">Overdue Follow-ups</p>
+              <h3 className="mt-2 text-[1.7rem] font-semibold leading-none tracking-[-0.05em] text-slate-900">{alertSummary.overdueFollowUps}</h3>
             </div>
-            <div className="premium-panel p-5">
-              <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">Follow-ups Due Soon</p>
-              <h3 className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-slate-900">{alertSummary.followUpsDueSoon}</h3>
+            <div className="premium-panel flex h-[92px] flex-col justify-center p-4">
+              <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-slate-500">Follow-ups Due Soon</p>
+              <h3 className="mt-2 text-[1.7rem] font-semibold leading-none tracking-[-0.05em] text-slate-900">{alertSummary.followUpsDueSoon}</h3>
             </div>
-            <div className="premium-panel p-5">
-              <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">High-risk Patients</p>
-              <h3 className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-slate-900">{alertSummary.highRiskPatients}</h3>
+            <div className="premium-panel flex h-[92px] flex-col justify-center p-4">
+              <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-slate-500">High-risk Patients</p>
+              <h3 className="mt-2 text-[1.7rem] font-semibold leading-none tracking-[-0.05em] text-slate-900">{alertSummary.highRiskPatients}</h3>
             </div>
           </div>
 

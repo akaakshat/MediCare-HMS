@@ -106,7 +106,7 @@ export function Sidebar({ isOpen, activeModule, onModuleChange }: SidebarProps) 
     <aside
       className={`${
         isOpen ? 'w-72' : 'w-0'
-      } flex flex-col overflow-hidden border-r border-slate-200 bg-white/90 text-slate-800 shadow-[0_0_0_1px_rgba(148,163,184,0.08)] transition-all duration-300 backdrop-blur-xl`}
+      } flex min-h-0 flex-col overflow-hidden border-r border-slate-200 bg-white/90 text-slate-800 shadow-[0_0_0_1px_rgba(148,163,184,0.08)] transition-all duration-300 backdrop-blur-xl`}
     >
       <div className="border-b border-slate-200 px-5 py-5">
         <div className="flex items-center gap-3">
@@ -127,7 +127,7 @@ export function Sidebar({ isOpen, activeModule, onModuleChange }: SidebarProps) 
           <p className="mt-2 text-xs text-slate-500">Contact your administrator to grant access</p>
         </div>
       ) : (
-        <nav className="sidebar-scroll flex-1 space-y-1 p-3">
+        <nav className="sidebar-scroll flex-1 overflow-y-auto space-y-1 p-3">
           {visibleMenu.map((item) => (
             <button
               key={item.id}

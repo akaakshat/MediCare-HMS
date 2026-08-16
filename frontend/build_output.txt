@@ -11,14 +11,14 @@ Browserslist: browsers data (caniuse-lite) is 8 months old. Please run:
 rendering chunks...
 computing gzip size...
 [2mdist/[22m[32mindex.html                          [39m[1m[2m    0.45 kB[22m[1m[22m[2m │ gzip:   0.29 kB[22m
-[2mdist/[22m[35massets/index-DmiMN8qW.css           [39m[1m[2m  138.48 kB[22m[1m[22m[2m │ gzip:  22.28 kB[22m
+[2mdist/[22m[35massets/index-CIy-FIkU.css           [39m[1m[2m  136.89 kB[22m[1m[22m[2m │ gzip:  22.03 kB[22m
 [2mdist/[22m[36massets/purify.es-CovBOfck.js        [39m[1m[2m   22.58 kB[22m[1m[22m[2m │ gzip:   8.67 kB[22m
-[2mdist/[22m[36massets/index.es-BHPGcCJt.js         [39m[1m[2m  158.58 kB[22m[1m[22m[2m │ gzip:  52.93 kB[22m
+[2mdist/[22m[36massets/index.es-IqnazGRv.js         [39m[1m[2m  158.58 kB[22m[1m[22m[2m │ gzip:  52.93 kB[22m
 [2mdist/[22m[36massets/html2canvas.esm-Ge7aVWlp.js  [39m[1m[2m  201.40 kB[22m[1m[22m[2m │ gzip:  47.48 kB[22m
-[2mdist/[22m[36massets/index-DGyMaJDP.js            [39m[1m[33m1,481.08 kB[39m[22m[2m │ gzip: 432.13 kB[22m
+[2mdist/[22m[36massets/index-Cf2zYPpj.js            [39m[1m[33m1,481.65 kB[39m[22m[2m │ gzip: 432.22 kB[22m
 [33m
 (!) Some chunks are larger than 500 kB after minification. Consider:
 - Using dynamic import() to code-split the application
 - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
 - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
-[32m✓ built in 41.11s[39m
+[32m✓ built in 40.87s[39m
