@@ -173,12 +173,12 @@ export function Header({ onMenuClick, activeModule, onModuleChange, theme = 'lig
   }, []);
 
   return (
-    <header className="border-b border-slate-200/80 bg-white/85 px-6 py-3 backdrop-blur-xl">
+    <header className="border-b border-slate-200/80 bg-white/90 px-5 py-3 backdrop-blur-xl">
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <button
             onClick={onMenuClick}
-            className="rounded-xl border border-slate-200 bg-white p-2.5 text-slate-700 shadow-sm transition-all hover:bg-slate-50"
+            className="rounded-xl border border-slate-200 bg-white p-2 text-slate-700 shadow-sm transition-all hover:bg-slate-50"
             aria-label="Toggle sidebar"
             title="Toggle sidebar"
           >
@@ -197,16 +197,15 @@ export function Header({ onMenuClick, activeModule, onModuleChange, theme = 'lig
           <button
             type="button"
             onClick={onThemeToggle}
-            className="hidden md:inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
+            className="hidden md:inline-flex items-center justify-center rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-slate-700 transition hover:bg-slate-100"
             aria-label="Toggle theme"
             title="Toggle theme"
           >
             {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            {theme === 'dark' ? 'Light' : 'Dark'}
           </button>
 
           <div className="relative" ref={searchRef}>
-            <div className="hidden md:flex w-[340px] items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 shadow-sm transition focus-within:border-blue-200 focus-within:bg-white">
+            <div className="hidden md:flex w-[320px] items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 shadow-sm transition focus-within:border-blue-200 focus-within:bg-white">
               <Search className="h-4 w-4 text-slate-400" />
               <input
                 type="text"
@@ -266,7 +265,7 @@ export function Header({ onMenuClick, activeModule, onModuleChange, theme = 'lig
                   ]);
                 }
               }}
-              className="relative rounded-2xl border border-slate-200 bg-white/80 p-2.5 shadow-sm transition-all hover:-translate-y-0.5 hover:bg-slate-50"
+              className="relative rounded-xl border border-slate-200 bg-white/80 p-2 shadow-sm transition-all hover:bg-slate-50"
               aria-haspopup="true"
               title="Notifications"
             >

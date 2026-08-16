@@ -430,6 +430,14 @@ export default function App() {
       if (visibleModules.length === 0) return <NoAccessPage />;
       return (
         <div className="space-y-6">
+          <div className="mb-2 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-blue-600">Overview</p>
+              <h1 className="mt-1 text-2xl font-semibold tracking-[-0.05em] text-slate-900">Dashboard</h1>
+            </div>
+            <p className="text-sm text-slate-500">Welcome back, {currentUser?.name || 'User'}</p>
+          </div>
+
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
             {stats.map((stat, index) => (
               <StatsCard key={index} {...stat} />

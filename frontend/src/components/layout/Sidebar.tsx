@@ -106,25 +106,25 @@ export function Sidebar({ isOpen, activeModule, onModuleChange }: SidebarProps) 
     <aside
       className={`${
         isOpen ? 'w-72' : 'w-0'
-      } bg-slate-950 text-slate-100 border-r border-slate-800/90 shadow-[10px_0_30px_rgba(2,6,23,0.18)] transition-all duration-300 overflow-hidden flex flex-col`}
+      } flex flex-col overflow-hidden border-r border-slate-200 bg-white/90 text-slate-800 shadow-[0_0_0_1px_rgba(148,163,184,0.08)] transition-all duration-300 backdrop-blur-xl`}
     >
-      <div className="border-b border-slate-800/80 px-5 py-5">
+      <div className="border-b border-slate-200 px-5 py-5">
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 via-sky-500 to-cyan-400 shadow-lg shadow-blue-500/20">
-            <Stethoscope className="h-5 w-5 text-white" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-blue-600 shadow-sm">
+            <Stethoscope className="h-4 w-4" />
           </div>
           <div className="min-w-0">
-            <h1 className="truncate text-[15px] font-semibold text-white">MediCare HMS</h1>
-            <p className="mt-1 text-[10px] font-medium uppercase tracking-[0.22em] text-slate-400">AI clinic operations</p>
+            <h1 className="truncate text-[15px] font-semibold text-slate-900">MediCare HMS</h1>
+            <p className="mt-1 text-[10px] font-medium uppercase tracking-[0.22em] text-slate-500">clinic operations</p>
           </div>
         </div>
       </div>
 
       {!hasAnyAccess ? (
-        <div className="flex-1 flex flex-col items-center justify-center p-4 text-center">
-          <Shield className="w-12 h-12 text-slate-500 mb-4" />
-          <p className="text-slate-200 text-sm">No access permissions</p>
-          <p className="text-slate-400 text-xs mt-2">Contact your administrator to grant access</p>
+        <div className="flex flex-1 flex-col items-center justify-center p-4 text-center">
+          <Shield className="mb-4 h-12 w-12 text-slate-400" />
+          <p className="text-sm text-slate-700">No access permissions</p>
+          <p className="mt-2 text-xs text-slate-500">Contact your administrator to grant access</p>
         </div>
       ) : (
         <nav className="sidebar-scroll flex-1 space-y-1 p-3">
@@ -133,33 +133,33 @@ export function Sidebar({ isOpen, activeModule, onModuleChange }: SidebarProps) 
               key={item.id}
               onClick={() => item.enabled && onModuleChange(item.id)}
               disabled={!item.enabled}
-              className={`w-full flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left transition-all duration-200 ${
+              className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left transition-all duration-200 ${
                 activeModule === item.id
-                  ? 'bg-blue-500/15 text-white ring-1 ring-inset ring-blue-400/30 shadow-[inset_0_0_0_1px_rgba(96,165,250,0.08)]'
+                  ? 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-100 shadow-[0_8px_18px_rgba(59,130,246,0.08)]'
                   : item.enabled
-                    ? 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
-                    : 'cursor-not-allowed bg-slate-900/60 text-slate-500'
+                    ? 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                    : 'cursor-not-allowed bg-slate-50 text-slate-400'
               }`}
             >
-              <span className="flex items-center gap-3 min-w-0">
-                <item.icon className={`h-4 w-4 shrink-0 ${activeModule === item.id ? 'text-blue-300' : 'text-slate-400'}`} />
+              <span className="flex min-w-0 items-center gap-3">
+                <item.icon className={`h-4 w-4 shrink-0 ${activeModule === item.id ? 'text-blue-600' : 'text-slate-500'}`} />
                 <span className="truncate text-sm font-medium">{item.label}</span>
               </span>
-              {activeModule === item.id && <span className="h-2 w-2 rounded-full bg-blue-400" />}
+              {activeModule === item.id && <span className="h-2 w-2 rounded-full bg-blue-500" />}
             </button>
           ))}
         </nav>
       )}
 
-      <div className="space-y-2 border-t border-slate-800/80 p-3">
+      <div className="space-y-2 border-t border-slate-200 p-3">
         <button
           onClick={() => onModuleChange('settings')}
-          className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-800/80 hover:text-white"
+          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
         >
           <Settings className="h-4 w-4" />
           <span>Settings</span>
         </button>
-        <button className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-rose-300 transition-colors hover:bg-rose-500/10 hover:text-rose-200">
+        <button className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50 hover:text-rose-700">
           <LogOut className="h-4 w-4" />
           <span>Logout</span>
         </button>
