@@ -127,7 +127,7 @@ export function Sidebar({ isOpen, activeModule, onModuleChange }: SidebarProps) 
           <p className="text-slate-400 text-xs mt-2">Contact your administrator to grant access</p>
         </div>
       ) : (
-        <nav className="flex-1 space-y-1 overflow-y-auto p-3">
+        <nav className="sidebar-scroll flex-1 space-y-1 p-3">
           {visibleMenu.map((item) => (
             <button
               key={item.id}
