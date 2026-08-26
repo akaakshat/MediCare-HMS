@@ -15,6 +15,7 @@ import { DoctorPerformanceAnalytics } from './components/modules/analytics/Docto
 import { IcdManagement } from './components/modules/icd/IcdManagement';
 import { ClinicUserManagement } from './components/modules/admin/ClinicUserManagement';
 import { SupportArticleManagement } from './components/modules/admin/SupportArticleManagement';
+import { DashboardOverview } from './components/modules/dashboard/DashboardOverview';
 import { AuditLogs } from './components/modules/admin/AuditLogs';
 import { NoAccessPage } from './components/modules/NoAccessPage';
 import { Login } from './components/auth/Login';
@@ -443,6 +444,13 @@ export default function App() {
               <StatsCard key={index} {...stat} />
             ))}
           </div>
+
+          <DashboardOverview
+            role={role}
+            permissions={currentPermissions}
+            features={currentFeatures}
+            onOpenModule={setActiveModule}
+          />
 
           {role === 'doctor' && (
             <div className="premium-panel p-5 mt-2">

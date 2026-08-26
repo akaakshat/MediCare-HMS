@@ -20,10 +20,20 @@ exports.getBills = async (req, res) => {
   try {
     console.log('GET /api/billing called');
 
-    const { uhid, patientId } = req.query;
+    const { uhid, patientId, date } = req.query;
     const query = {};
     if (uhid) query.uhid = uhid;
     if (patientId) query.patient = patientId;
+    if (date) {
+      const dayStart = new Date(`${date}T00:00:00.000`);
+      const dayEnd = new Date(dayStart);
+      dayEnd.setDate(dayEnd.getDate() + 1);
+      query.$or = [
+        { date: { $gte: dayStart, $lt: dayEnd } },
+        { date: { $exists: false }, createdAt: { $gte: dayStart, $lt: dayEnd } },
+        { date: null, createdAt: { $gte: dayStart, $lt: dayEnd } },
+      ];
+    }
 
     // Use lean() to avoid Mongoose document wrappers so we can freely mutate the returned objects.
     const bills = await Bill.find(query).populate('patient createdBy doctor').sort({ createdAt: -1 }).lean();

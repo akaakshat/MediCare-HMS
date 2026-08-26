@@ -366,8 +366,8 @@ export class ApiClient {
   }
 
   // Pharmacy
-  static async getPharmacyItems() {
-    return this.request<{ success: boolean; items: any[] }>('/pharmacy');
+  static async getPharmacyItems(params?: Record<string, any>) {
+    return this.request<{ success: boolean; items: any[] }>('/pharmacy', { params });
   }
 
   static async createPharmacyItem(data: any) {
@@ -391,8 +391,8 @@ export class ApiClient {
   }
 
   // Billing
-  static async getBills() {
-    return this.request<{ success: boolean; bills: any[] }>('/billing');
+  static async getBills(params?: Record<string, any>) {
+    return this.request<{ success: boolean; bills: any[] }>('/billing', { params });
   }
 
   static async createBill(data: any) {

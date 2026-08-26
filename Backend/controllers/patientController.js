@@ -112,7 +112,7 @@ exports.getPatients = async (req, res) => {
     const limit = Math.min(100, Math.max(5, parseInt(req.query.limit) || 20));
     const skip = (page - 1) * limit;
     const includeInactive = String(req.query.includeInactive) === 'true';
-    const { search, phone, uhid, email } = req.query;
+    const { search, phone, uhid, email, createdFrom, createdTo } = req.query;
 
     const query = {};
     if (!includeInactive) {
@@ -140,6 +140,11 @@ exports.getPatients = async (req, res) => {
     if (phone) query.phone = String(phone);
     if (uhid) query.uhid = String(uhid);
     if (email) query.email = String(email);
+    if (createdFrom || createdTo) {
+      query.createdAt = {};
+      if (createdFrom) query.createdAt.$gte = new Date(createdFrom);
+      if (createdTo) query.createdAt.$lt = new Date(createdTo);
+    }
 
     const [total, patients] = await Promise.all([
       Patient.countDocuments(query),
