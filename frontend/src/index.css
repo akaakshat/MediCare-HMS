@@ -331,11 +331,16 @@
 
   body.dark input,
   body.dark textarea,
-  body.dark select,
-  body.dark option {
+  body.dark select {
     color: #f8fafc !important;
     background-color: #111827 !important;
     border-color: #475569 !important;
+  }
+
+  body.dark select,
+  body.dark select option {
+    color: #000000 !important;
+    background-color: #ffffff !important;
   }
 
   body.dark input::placeholder,
