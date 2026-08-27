@@ -157,6 +157,8 @@ app.use((err, req, res, next) => {
   res.status(500).json({ success: false, message: 'Server error' });
 });
 
+const runStartupSeeds = process.env.RUN_STARTUP_SEEDS === 'true';
+
 connectDB().then(async () => {
   app.listen(PORT, '0.0.0.0', async () => {
     console.log(`Server running on port ${PORT}`);
@@ -168,30 +170,35 @@ connectDB().then(async () => {
     scheduleInactivePatientJob();
   });
 
-  importIcdCodes(path.join(__dirname, 'section111_valid_icd10_october2025.csv'), {
-    connect: false,
-    skipIfExists: true,
-  })
-    .then((summary) => {
-      console.log(`ICD seed import completed: inserted=${summary.inserted}, updated=${summary.updated}, skipped=${summary.skipped}`);
+  if (runStartupSeeds) {
+    console.log('RUN_STARTUP_SEEDS=true; importing reference data in the background');
+    importIcdCodes(path.join(__dirname, 'section111_valid_icd10_october2025.csv'), {
+      connect: false,
+      skipIfExists: true,
     })
-    .catch((err) => {
-      console.error('ICD seed import failed:', err);
-    });
+      .then((summary) => {
+        console.log(`ICD seed import completed: inserted=${summary.inserted}, updated=${summary.updated}, skipped=${summary.skipped}`);
+      })
+      .catch((err) => {
+        console.error('ICD seed import failed:', err);
+      });
 
-  importMedicineFormulas([
-    path.join(__dirname, '..', 'WHO-MVP-EMP-IAU-2019.06-eng.csv'),
-    path.join(__dirname, '..', 'essentialmedicineslist2013_2.csv'),
-  ], {
-    connect: false,
-    skipIfExists: false,
-  })
-    .then((summary) => {
-      console.log(`Medicine formulas seed completed: inserted=${summary.inserted}, updated=${summary.updated}, skipped=${summary.skipped}`);
+    importMedicineFormulas([
+      path.join(__dirname, '..', 'WHO-MVP-EMP-IAU-2019.06-eng.csv'),
+      path.join(__dirname, '..', 'essentialmedicineslist2013_2.csv'),
+    ], {
+      connect: false,
+      skipIfExists: true,
     })
-    .catch((err) => {
-      console.error('Medicine formulas seed failed:', err);
-    });
+      .then((summary) => {
+        console.log(`Medicine formulas seed completed: inserted=${summary.inserted}, updated=${summary.updated}, skipped=${summary.skipped}`);
+      })
+      .catch((err) => {
+        console.error('Medicine formulas seed failed:', err);
+      });
+  } else {
+    console.log('Reference-data startup imports disabled; run the seed scripts explicitly when needed');
+  }
 }).catch((err) => {
   console.error('Failed to connect to DB and start server:', err);
   process.exit(1);

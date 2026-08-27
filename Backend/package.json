@@ -9,7 +9,9 @@
     "view-db": "node scripts/view-database.js",
     "reset-admin": "node scripts/reset-admin.js",
     "import-icd10": "node scripts/import-icd10.js",
-    "init-mdm": "node scripts/init-master-data.js"
+    "init-mdm": "node scripts/init-master-data.js",
+    "seed-medicines": "node scripts/import-medicine-formulas.js ../WHO-MVP-EMP-IAU-2019.06-eng.csv ../essentialmedicineslist2013_2.csv",
+    "seed-reference-data": "npm run import-icd10 -- section111_valid_icd10_october2025.csv && npm run seed-medicines"
   },
   "keywords": [],
   "author": "",

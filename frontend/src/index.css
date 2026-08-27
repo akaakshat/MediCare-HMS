@@ -326,8 +326,19 @@
   body.dark .hover\:bg-slate-50:hover,
   body.dark .hover\:bg-slate-100:hover,
   body.dark .hover\:bg-white:hover,
-  body.dark .hover\:bg-white\/90:hover {
+  body.dark .hover\:bg-white\/90:hover,
+  body.dark .hover\:bg-gray-50:hover,
+  body.dark .hover\:bg-gray-100:hover,
+  body.dark .hover\:bg-gray-200:hover {
     background-color: rgba(15, 23, 42, 0.92) !important;
+  }
+
+  body.dark .hover\:text-gray-900:hover,
+  body.dark .hover\:text-gray-700:hover,
+  body.dark .hover\:text-gray-600:hover,
+  body.dark .hover\:text-slate-900:hover,
+  body.dark .hover\:text-slate-700:hover {
+    color: #f8fafc !important;
   }
 
   body.dark .text-slate-700,
