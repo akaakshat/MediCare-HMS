@@ -456,7 +456,7 @@ export function OPCaseSheet({ onBack }: OPCaseSheetProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="emr-workspace space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button
@@ -516,23 +516,33 @@ export function OPCaseSheet({ onBack }: OPCaseSheetProps) {
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="bg-white rounded-lg shadow border border-gray-200 p-4">
-            <h3 className="text-gray-900 mb-4">Recent Case Sheets</h3>
-            <div className="space-y-2">
-              {caseSheets.map((sheet) => (
-                <button
-                  key={sheet._id || sheet.id}
-                  onClick={() => setSelectedPatient(sheet.uhid)}
-                  className={`w-full text-left p-3 rounded-lg transition-colors ${
-                    selectedPatient === sheet.uhid
-                      ? 'bg-orange-50 border border-orange-200'
-                      : 'bg-gray-50 hover:bg-gray-100'
-                  }`}
-                >
-                  <p className="text-sm text-gray-900 mb-1">{sheet.patient}</p>
-                  <p className="text-xs text-gray-500">{sheet.uhid} • {sheet.date}</p>
-                </button>
-              ))}
+          <div className="emr-patient-panel bg-white rounded-lg shadow border border-gray-200 p-4">
+            <h3 className="text-gray-900 mb-4">Patients with Case Sheets</h3>
+            <div className="overflow-x-auto">
+              <table className="emr-patient-table w-full text-left">
+                <thead>
+                  <tr className="border-b border-gray-200 text-[10px] uppercase tracking-wider text-gray-500">
+                    <th className="px-3 py-2">Patient</th>
+                    <th className="px-3 py-2">UHID</th>
+                    <th className="px-3 py-2">Doctor</th>
+                    <th className="px-3 py-2">Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {caseSheets.map((sheet) => (
+                    <tr
+                      key={sheet._id || sheet.id}
+                      onClick={() => setSelectedPatient(sheet.uhid)}
+                      className={`emr-patient-row cursor-pointer border-b border-gray-100 transition-colors ${selectedPatient === sheet.uhid ? 'is-selected' : ''}`}
+                    >
+                      <td className="px-3 py-3 text-sm font-medium text-gray-900">{sheet.patient}</td>
+                      <td className="px-3 py-3 text-xs text-gray-500">{sheet.uhid}</td>
+                      <td className="px-3 py-3 text-xs text-gray-600">{sheet.doctor}</td>
+                      <td className="whitespace-nowrap px-3 py-3 text-xs text-gray-500">{formatDateDDMMYYYY(sheet.date)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
 
             {caseSheets.length > 0 && (
@@ -574,10 +584,10 @@ export function OPCaseSheet({ onBack }: OPCaseSheetProps) {
             )}
           </div>
 
-          <div className="lg:col-span-2 bg-white rounded-lg shadow border border-gray-200 p-6">
+          <div className="emr-detail-panel lg:col-span-2 bg-white rounded-lg shadow border border-gray-200 p-6">
             {caseSheets.filter(s => s.uhid === selectedPatient).map((sheet) => (
               <div key={sheet._id || sheet.id} className="space-y-4">
-                <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 shadow-sm">
+                  <div className="emr-detail-card rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 shadow-sm">
                   <div className="flex items-start gap-3">
                     <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-slate-600 ring-1 ring-slate-200">
                       <User className="h-5 w-5" />
@@ -618,7 +628,7 @@ export function OPCaseSheet({ onBack }: OPCaseSheetProps) {
                 </div>
 
                 <div className="grid gap-3 xl:grid-cols-2">
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4 shadow-sm">
+                  <div className="emr-detail-card rounded-2xl border border-slate-200 bg-slate-50/60 p-4 shadow-sm">
                     <div className="mb-2 flex items-center gap-2">
                       <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                         <Activity className="h-4 w-4" />
@@ -629,7 +639,7 @@ export function OPCaseSheet({ onBack }: OPCaseSheetProps) {
                   </div>
 
                   {sheet.hopi && (
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4 shadow-sm">
+                    <div className="emr-detail-card rounded-2xl border border-slate-200 bg-slate-50/60 p-4 shadow-sm">
                       <div className="mb-2 flex items-center gap-2">
                         <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                           <FileText className="h-4 w-4" />
@@ -641,7 +651,7 @@ export function OPCaseSheet({ onBack }: OPCaseSheetProps) {
                   )}
 
                   {sheet.physicalExamination && (
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4 shadow-sm xl:col-span-2">
+                    <div className="emr-detail-card rounded-2xl border border-slate-200 bg-slate-50/60 p-4 shadow-sm xl:col-span-2">
                       <div className="mb-2 flex items-center gap-2">
                         <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                           <Activity className="h-4 w-4" />
@@ -652,7 +662,7 @@ export function OPCaseSheet({ onBack }: OPCaseSheetProps) {
                     </div>
                   )}
 
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4 shadow-sm">
+                  <div className="emr-detail-card rounded-2xl border border-slate-200 bg-slate-50/60 p-4 shadow-sm">
                     <div className="mb-2 flex items-center gap-2">
                       <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                         <FileText className="h-4 w-4" />
@@ -662,7 +672,7 @@ export function OPCaseSheet({ onBack }: OPCaseSheetProps) {
                     <p className="text-[13px] leading-6 text-slate-600">{sheet.diagnosis}</p>
                   </div>
 
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4 shadow-sm">
+                  <div className="emr-detail-card rounded-2xl border border-slate-200 bg-slate-50/60 p-4 shadow-sm">
                     <div className="mb-2 flex items-center gap-2">
                       <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                         <Pill className="h-4 w-4" />
@@ -672,7 +682,7 @@ export function OPCaseSheet({ onBack }: OPCaseSheetProps) {
                     <p className="text-[13px] leading-6 text-slate-600">{sheet.prescription}</p>
                   </div>
 
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4 shadow-sm xl:col-span-2">
+                  <div className="emr-detail-card rounded-2xl border border-slate-200 bg-slate-50/60 p-4 shadow-sm xl:col-span-2">
                     <div className="mb-2 flex items-center gap-2">
                       <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                         <TestTube className="h-4 w-4" />
@@ -737,7 +747,7 @@ export function OPCaseSheet({ onBack }: OPCaseSheetProps) {
       {/* Dialog */}
       {showDialog && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="emr-dialog bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <h3 className="text-gray-900">New Case Sheet</h3>
               <button

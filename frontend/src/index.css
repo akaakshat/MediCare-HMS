@@ -363,6 +363,38 @@
     color: #f8fafc !important;
   }
 
+  body.dark .emr-workspace .emr-patient-panel,
+  body.dark .emr-workspace .emr-detail-panel,
+  body.dark .emr-workspace .emr-dialog {
+    background-color: #0f172a !important;
+    border-color: #334155 !important;
+    color: #e2e8f0 !important;
+  }
+
+  body.dark .emr-workspace .emr-patient-table thead tr {
+    background-color: #1e293b !important;
+    color: #94a3b8 !important;
+  }
+
+  body.dark .emr-workspace .emr-patient-row {
+    background-color: #111827 !important;
+    border-color: #334155 !important;
+  }
+
+  body.dark .emr-workspace .emr-patient-row:hover,
+  body.dark .emr-workspace .emr-patient-row.is-selected {
+    background-color: #243447 !important;
+  }
+
+  body.dark .emr-workspace .emr-detail-card {
+    background-color: #172033 !important;
+    border-color: #334155 !important;
+  }
+
+  body.dark .emr-workspace .emr-detail-card .bg-blue-50 {
+    background-color: rgba(37, 99, 235, 0.2) !important;
+  }
+
   body.dark .hover\:bg-slate-50:hover,
   body.dark .hover\:bg-slate-100:hover,
   body.dark .hover\:bg-white:hover,
