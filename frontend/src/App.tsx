@@ -251,7 +251,7 @@ export default function App() {
     }
   };
 
-  // Fetch realtime metrics and poll every 5 seconds while authenticated
+  // Refresh dashboard metrics every 30 seconds while authenticated.
   useEffect(() => {
     let timer: any;
     const fetchMetrics = async () => {
@@ -316,7 +316,7 @@ export default function App() {
     if (isAuthenticated) {
       fetchMetrics();
       loadDoctorAvailability();
-      timer = setInterval(fetchMetrics, 5000);
+      timer = setInterval(fetchMetrics, 30000);
     }
 
     return () => {

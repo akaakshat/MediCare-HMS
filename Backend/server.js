@@ -62,7 +62,7 @@ app.use(
 // Rate limiting for API requests (can be customized via env vars)
 // Note: In development (NODE_ENV !== 'production') we disable rate limiting to avoid
 // hitting 429 when tooling (Vite/HMR) or dashboard polling generates lots of requests.
-const RATE_LIMIT_MAX = parseInt(process.env.RATE_LIMIT_MAX || '300', 10);
+const RATE_LIMIT_MAX = parseInt(process.env.RATE_LIMIT_MAX || '1200', 10);
 const DISABLE_RATE_LIMIT =
   process.env.DISABLE_RATE_LIMIT === 'true' ||
   process.env.NODE_ENV !== 'production';
