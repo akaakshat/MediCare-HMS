@@ -8,6 +8,40 @@ const NurseProfile = require('../models/NurseProfile');
 const StaffProfile = require('../models/StaffProfile');
 const AuditLog = require('../models/AuditLog');
 const validationRules = require('../utils/validationRules');
+const mongoose = require('mongoose');
+const MasterData = require('../models/MasterData');
+
+const resolveDepartmentId = async (value, { required = false } = {}) => {
+  if (!value) {
+    if (required) throw new Error('Department is required');
+    return undefined;
+  }
+
+  if (mongoose.isValidObjectId(value)) return value;
+
+  const departmentName = String(value)
+    .replace(/[-_]+/g, ' ')
+    .replace(/\b\w/g, (letter) => letter.toUpperCase())
+    .trim();
+  const code = `DEPT_${departmentName.replace(/[^A-Z0-9]+/gi, '_').toUpperCase()}`;
+  let department = await MasterData.findOne({
+    type: 'department',
+    $or: [{ name: departmentName }, { code }, { code: String(value).toUpperCase() }],
+    isActive: true,
+  });
+
+  if (!department) {
+    department = await MasterData.create({
+      type: 'department',
+      name: departmentName,
+      code,
+      description: 'Department created from clinic user setup',
+      isActive: true,
+    });
+  }
+
+  return department._id;
+};
 
 const collectUserFeatureAccess = (user = {}, featureAccessRecord = null) => {
   const featureSet = new Set();
@@ -122,6 +156,7 @@ exports.createClinicUser = async (req, res) => {
     let roleProfile;
     switch (commonFields.role.toLowerCase()) {
       case 'doctor':
+        const doctorDepartment = await resolveDepartmentId(roleSpecificFields.department, { required: true });
         roleProfile = new DoctorProfile({
           userId: newUser._id,
           specialization: roleSpecificFields.specialization,
@@ -130,7 +165,7 @@ exports.createClinicUser = async (req, res) => {
           licenseNumber: roleSpecificFields.licenseNumber,
           licenseExpiry: roleSpecificFields.licenseExpiry,
           consultationFees: roleSpecificFields.consultationFees,
-          department: roleSpecificFields.department,
+          department: doctorDepartment,
           availableDays: roleSpecificFields.availableDays,
           timeSlots: roleSpecificFields.timeSlots,
           bio: roleSpecificFields.bio || '',
@@ -140,11 +175,12 @@ exports.createClinicUser = async (req, res) => {
         break;
 
       case 'receptionist':
+        const receptionistDepartment = await resolveDepartmentId(roleSpecificFields.department);
         roleProfile = new ReceptionistProfile({
           userId: newUser._id,
           shiftTiming: roleSpecificFields.shiftTiming,
           workExperience: roleSpecificFields.workExperience,
-          department: roleSpecificFields.department || null,
+          department: receptionistDepartment || null,
           assignedToDoctor: roleSpecificFields.assignedToDoctor || null,
           skills: roleSpecificFields.skills || []
         });
@@ -152,13 +188,14 @@ exports.createClinicUser = async (req, res) => {
         break;
 
       case 'nurse':
+        const nurseDepartment = await resolveDepartmentId(roleSpecificFields.assignedDepartment);
         roleProfile = new NurseProfile({
           userId: newUser._id,
           qualification: roleSpecificFields.qualification,
           registrationNumber: roleSpecificFields.registrationNumber,
           experience: roleSpecificFields.experience,
           assignedDoctor: roleSpecificFields.assignedDoctor || null,
-          assignedDepartment: roleSpecificFields.assignedDepartment || null,
+          assignedDepartment: nurseDepartment || null,
           shiftTiming: roleSpecificFields.shiftTiming,
           specialization: roleSpecificFields.specialization || 'General',
           certifications: roleSpecificFields.certifications || []
@@ -167,10 +204,11 @@ exports.createClinicUser = async (req, res) => {
         break;
 
       case 'staff':
+        const staffDepartment = await resolveDepartmentId(roleSpecificFields.department);
         roleProfile = new StaffProfile({
           userId: newUser._id,
           jobTitle: roleSpecificFields.jobTitle,
-          department: roleSpecificFields.department || null,
+          department: staffDepartment || null,
           shiftTiming: roleSpecificFields.shiftTiming || null,
           workExperience: roleSpecificFields.workExperience || 0,
           certifications: roleSpecificFields.certifications || [],
