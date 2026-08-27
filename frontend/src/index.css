@@ -323,6 +323,41 @@
     color: #f8fafc !important;
   }
 
+  body.dark .bg-gray-50,
+  body.dark .bg-gray-100,
+  body.dark .bg-gray-200 {
+    color: #e2e8f0 !important;
+  }
+
+  body.dark input,
+  body.dark textarea,
+  body.dark select,
+  body.dark option {
+    color: #f8fafc !important;
+    background-color: #111827 !important;
+    border-color: #475569 !important;
+  }
+
+  body.dark input::placeholder,
+  body.dark textarea::placeholder {
+    color: #94a3b8 !important;
+  }
+
+  body.dark .login-page {
+    background-image: radial-gradient(circle at top left, rgba(37, 99, 235, 0.24), transparent 30%), radial-gradient(circle at bottom right, rgba(14, 165, 233, 0.16), transparent 30%), linear-gradient(135deg, #020617 0%, #0f172a 48%, #111827 100%) !important;
+  }
+
+  body.dark .login-card {
+    background-color: rgba(15, 23, 42, 0.92) !important;
+    border-color: rgba(148, 163, 184, 0.3) !important;
+    color: #f8fafc !important;
+  }
+
+  body.dark .login-input {
+    background-color: rgba(15, 23, 42, 0.8) !important;
+    color: #f8fafc !important;
+  }
+
   body.dark .hover\:bg-slate-50:hover,
   body.dark .hover\:bg-slate-100:hover,
   body.dark .hover\:bg-white:hover,
@@ -338,6 +373,13 @@
   body.dark .hover\:text-gray-600:hover,
   body.dark .hover\:text-slate-900:hover,
   body.dark .hover\:text-slate-700:hover {
+    color: #f8fafc !important;
+  }
+
+  body.dark [class*="hover:bg-white"]:hover,
+  body.dark [class*="hover:bg-gray-"]:hover,
+  body.dark [class*="hover:bg-slate-"]:hover {
+    background-color: #1e293b !important;
     color: #f8fafc !important;
   }
 
